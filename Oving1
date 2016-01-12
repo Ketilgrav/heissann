@@ -1,0 +1,27 @@
+Oppg3:
+Concurrency: Flere oppgaver kjører sammtidig. Oppgavene kan samhandle. 
+Parallelism: Flere oppgaver kjører sammtidig. En større oppgave er delt opp i mindre deler, som utføres sammtidig.
+Forskjeller: Concurrency handler om hvordan oppgavene samhandler. Parallelism hvordan en oppgave oppdales. Concurrency så trenger 
+ikke  oppgavene å være rellaterte.
+
+Hvorfor multicore: Lar flere prosesser kjøre faktisk sammtidig (ikke bare bytte på).
+Hvilke problemer løser concurrency: Når flere oppgaver må kjøres til enhver tid.
+Blir livet lettere eller vannskligere av concrurrency: Både og. Vannskligere å kode, mer mulige feil. Men kan bli mer oversiktelig, 
+og skalere bedre.
+
+Forskjellen: 
+  Processes: En instanse av et dataprogram. Programmet kan bestå av flere tråder. 
+  Threads: En del av program instruksjonen som håndteres av scheduleren. 
+  Green threads: Tråder som styres av et "runtime library" eller "virtual machine" istedet for OS-et, gjør det mulig å bruke
+  tråder på maskiner hvor det vanlighvis ikke var mulig.
+  Coroutines: Tillater flere inngagnspunkter for suspanderte oppgaver. 
+Hvilke av disse lages:
+  (C/POSIX) pthread_create(): Thread
+  (Python) threading.Thread():
+  (Go) go:
+  
+Global Interpreter Lock: Hindrer flere tråder fra å kjøre Python bytecode sammtidig.
+Workaround for GIL: "multiprocessing" modul.
+func GOMAXPROCS(n int) int: Setter antall CPU-er programmet kan bruke. 
+
+
