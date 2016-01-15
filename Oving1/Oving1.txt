@@ -23,5 +23,3 @@ Hvilke av disse lages:
 Global Interpreter Lock: Hindrer flere tråder fra å kjøre Python bytecode sammtidig.
 Workaround for GIL: "multiprocessing" modul.
 func GOMAXPROCS(n int) int: Setter antall CPU-er programmet kan bruke. 
-
-
