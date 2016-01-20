@@ -1,0 +1,9 @@
+Atomisk opperasjon: En opperasjon som ikke er oppdelbar. Altså at en tråd ikke kan stoppe og gå til en annen midt inne i opperasjonen.
+
+Semaphore: En variabel som forteller om en global variabel er i bruk, og dermed ikke kan leses inn for endring av en annen tråd. 
+
+Mutex: En sjef holder en nøkkel som en tråd trenger å ha for å bruke de/den globale variabelen. Når en tråd er ferdig med variabelen gis den tilbake til sjefen, som kan deligere den til andre.
+
+Critical section: Delen av programmet hvor en tråd trenger mutex tillgang for å bruke. Altså det delte området.
+
+
