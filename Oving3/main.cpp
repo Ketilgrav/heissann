@@ -59,16 +59,16 @@ int main(){
 
 	char msg[22] = "HILSER FRA LABPLASS 9";
 	while(1){
-		printf("Sent: %s\n", msg);
+		/*printf("Sent: %s\n", msg);
 		if (sendto(sendSock, msg, strlen(msg), 0, (struct sockaddr *)&sendAddr, sendAddrLenght) < 0){
 				perror("Sending socket failed");
 				return -1;
-		}
+		}*/
 		recieveMsgLenght = recvfrom(listenSock, buffer, BUF_SIZE, 0, (struct sockaddr *)&serverAddr, &serverAddrLength);
 		printf("Recieved: %s\n", buffer);
+		printf("From IP: %s\n\n", inet_ntoa(serverAddr.sin_addr));
+
 		memset(buffer,0,sizeof(buffer));
-		struct sockaddr_in test = (struct sockaddr_in) serverAddr;
-		printf("From IP: %s\n\n", inet_ntoa(test.sin_addr));
 		sleep(1);
 	}
 ///////////////////////////////
