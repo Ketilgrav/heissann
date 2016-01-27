@@ -8,6 +8,8 @@
 #include <iostream> // Cin
 #include <unistd.h> // Pause
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
 const int BUF_SIZE = 1024;
 
 int myPort = 20009;
@@ -57,13 +59,13 @@ int main(){
 		return -1;
 	}
 
-	char msg[22] = "HILSER FRA LABPLASS 9";
+	char msg[22] = "( ͡° ͜ʖ ͡°)";
 	while(1){
-		/*printf("Sent: %s\n", msg);
+		printf("Sent: %s\n", msg);
 		if (sendto(sendSock, msg, strlen(msg), 0, (struct sockaddr *)&sendAddr, sendAddrLenght) < 0){
 				perror("Sending socket failed");
 				return -1;
-		}*/
+		}
 		recieveMsgLenght = recvfrom(listenSock, buffer, BUF_SIZE, 0, (struct sockaddr *)&serverAddr, &serverAddrLength);
 		printf("Recieved: %s\n", buffer);
 		printf("From IP: %s\n\n", inet_ntoa(serverAddr.sin_addr));
@@ -76,3 +78,5 @@ int main(){
 
 	return 0;
 }
+
+#pragma clang diagnostic pop
