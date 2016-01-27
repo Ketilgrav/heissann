@@ -3,7 +3,7 @@
 //Request matrisa burde ikke ligge her
 #define numFloors 4
 #define operatorButton 0
-#define uppButton 1
+#define upButton 1
 #define downButton 2
 #define owner 3
 
@@ -116,7 +116,7 @@ bool requestOnFloor(int current_floor){
     }
     //om det er vår oppgave å hente noen på denne etasjoen
     else if(request_matrix[current_floor][owner]==elevatorID){
-        return request_matrix[current_floor][uppButton] || request_matrix[current_floor][downButton]
+        return request_matrix[current_floor][upButton] || request_matrix[current_floor][downButton]
     }
     return false;
 }
@@ -124,14 +124,14 @@ bool requestOnFloor(int current_floor){
 bool requestInDir(int move_dir,int current_floor){
     if(move_dir==up){
         for(int floor=current_floor+1;floor<numFloors;++floor){
-            if(request_matrix[floor][operatorButton] || request_matrix[floor][uppButton] || request_matrix[floor][downButton]){
+            if(request_matrix[floor][operatorButton] || request_matrix[floor][upButton] || request_matrix[floor][downButton]){
                 return true;
             }
         }
     }
     else if(move_dir==down){
         for(int i=current_floor-1; i>=0; --i){
-            if(request_matrix[floor][operatorButton] || request_matrix[floor][uppButton] || request_matrix[floor][downButton]){
+            if(request_matrix[floor][operatorButton] || request_matrix[floor][upButton] || request_matrix[floor][downButton]){
                 return true;
             }
         }
