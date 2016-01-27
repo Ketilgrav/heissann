@@ -16,7 +16,7 @@ int myPort = 20009;
 int listenPort = 30000;
 int sendPort = 30000;
 int listenSock, sendSock;
-ssize_t recieveMsgLenght;
+ssize_t receiveAddrLength;
 
 int main(){
 	unsigned char buffer[BUF_SIZE];
@@ -25,14 +25,14 @@ int main(){
 	myaddr.sin_family = AF_INET;
 	myaddr.sin_port = htons(listenPort);
 	myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	socklen_t recieveAddrLenght = sizeof(myaddr);
+	socklen_t receiveAddrLength = sizeof(myaddr);
 
 ////////////////////////
 	struct sockaddr_in sendAddr;
 	sendAddr.sin_family = AF_INET;
 	sendAddr.sin_port = htons(sendPort);
 	inet_aton("129.241.187.255", &sendAddr.sin_addr);
-	socklen_t sendAddrLenght = sizeof(sendAddr);
+	socklen_t sendAddrLength = sizeof(sendAddr);
 /////////////////////////////////////
 
 	struct sockaddr_in serverAddr;
@@ -44,7 +44,7 @@ int main(){
 		printf("Listensock not created\n");
 	}
 
-	if (bind(listenSock, (struct sockaddr *)&myaddr, recieveAddrLenght) < 0){
+	if (bind(listenSock, (struct sockaddr *)&myaddr, receiveAddrLength) < 0){
 		perror("Failed to bind recSocket");
 		return -1;
 	}
@@ -62,12 +62,12 @@ int main(){
 	char msg[22] = "( ͡° ͜ʖ ͡°)";
 	while(1){
 		printf("Sent: %s\n", msg);
-		if (sendto(sendSock, msg, strlen(msg), 0, (struct sockaddr *)&sendAddr, sendAddrLenght) < 0){
+		if (sendto(sendSock, msg, strlen(msg), 0, (struct sockaddr *)&sendAddr, sendAddrLength) < 0){
 				perror("Sending socket failed");
 				return -1;
 		}
-		recieveMsgLenght = recvfrom(listenSock, buffer, BUF_SIZE, 0, (struct sockaddr *)&serverAddr, &serverAddrLength);
-		printf("Recieved: %s\n", buffer);
+		receiveAddrLength = recvfrom(listenSock, buffer, BUF_SIZE, 0, (struct sockaddr *)&serverAddr, &serverAddrLength);
+		printf("received: %s\n", buffer);
 		printf("From IP: %s\n\n", inet_ntoa(serverAddr.sin_addr));
 
 		memset(buffer,0,sizeof(buffer));
