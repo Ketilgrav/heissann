@@ -9,7 +9,7 @@
 
 int request_matrix[numFloors][4];
 
-//a
+//Motor defines
 #define up 1;
 #define down -1;
 #define off 0
