@@ -5,12 +5,40 @@
 using namespace std;
 
 typedef message;
-typedef button;
+
+struct Button {
+	int floor;
+	int button;
+	Button(int floor, int button) {
+		set(floor, button);
+	}
+	Button() {
+		deactivate();
+	}
+	void deactivate() {
+		floor = -1;
+	}
+	bool isActive() {
+		floor = 1;
+	}
+	void set(int floor, int button) {
+		this->floor = floor;
+		this->button = button;
+	}
+};
+
 
 #define NULL_MESSAGE
-#define NULL_BUTTON
+#define NULL_BUTTON Button(-1,-1);
 
 #define NUM_FLOORS
+#define TIME_OUT
+
+#define MESSAGE_TYPE 0
+#define MESSAGE_BUTTON_FLOOR 1 
+#define MESSAGE_BUTTON_TYPE 2 
+#define MESSAGE_COST 3
+#define MESSAGE_TIMEOUT 3
 
 int main(){
 	bool requestMatrix[NUM_FLOORS][4];
@@ -18,35 +46,40 @@ int main(){
 	time_t currentTime;
 
 	int finishedRequests = NULL;
-	mutex finishedRequests_mutex;
-	thread stateMachine(state_machine, &requestMatrix, &finishedRequests,&finishedRequests_mutex);
+	mutex finishedRequestsMutex;
+	thread stateMachine(state_machine, &requestMatrix, &finishedRequests,&finishedRequestsMutex);
 
-	message recieved = NULL_MESSAGE;
-	mutex recieved_mutex;
-	thread recieve(UDP_recieve,&recieve,&recieved_mutex);
+	int[3] recieved = NULL_MESSAGE;
+	mutex recievedMutex;
+	thread recieve(UDP_recieve,&recieve,&recievedMutex);
 
-	button buttonPress = NULL_BUTTON;
+	Button buttonPress;
 
 
 	time_t newRequestsTimeInn[NUM_FLOORS];
-	bool newReqestOur[NUM_FLOORS];
+	bool newReqestResponsability[NUM_FLOORS];
+
+	unsigned cost = INT16_MAX;
 
 	while(1){
 		buttonPress = get_button_press();
 
 		if(buttonPress != NULL_BUTTON){
-			//Beregn cost
-			//Skriv inn knappen, og timeout, men ikke hvem som skal gjøre den.
+			cost = calculateCost(requestMatrix);
+			requestMatrix[buttonPress.floor][buttonPress.button] = 1;
+			requestMatrix[buttonPress.floor][TIME_OUT] = 0; //TODO: Sett tiden
 			//Transmit knappen med cost
-			//newRequestsTimeInn[floor] = om 2sec ellerno
-			//newRequestOur[floor]= true;
+			newRequestsTimeInn[buttonPress.floor] = 0;//TODO:  om 2sec ellerno
+			newRequestOur[floor]= true;
+			buttonPress.deactivate();
 		}
 
 		if (recieved != NULL_MESSAGE) {
 			if (recieved.type == REQUEST) {
-				//Skriv inn requesten, og timeout, men ikke hvem som skal gjøre den. 
-				//Beregn costen vår for denne oppgaven.
-				//Er vi strengt bedre?
+				requestMatrix[recieved[MESSAGE_BUTTON_FLOOR][buttonPress.button] = 1;
+				requestMatrix[buttonPress.floor][TIME_OUT] = 0; //TODO: Sett tiden //ENDRE TIL MESSAGE
+				cost = calculateCost;
+				if(cost < ) //Om vår kost er strengt bedre
 					//Transmitt knappen med vår cost 
 					//newRequestsTimeInn[floor] = om 2secish
 					//newReqestOur[floor] = 1;
@@ -79,5 +112,9 @@ int main(){
 			}
 		}
 	}
+
+}
+
+int calculateCost(bool** requestMatrix) {
 
 }
