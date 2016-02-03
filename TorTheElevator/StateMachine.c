@@ -1,144 +1,162 @@
-#define elevatorId
+#include <thread>
+#include <mutex>
+
+using namespace std;
 
 //Request matrisa burde ikke ligge her
-#define numFloors 4
-#define operatorButton 0
-#define upButton 1
-#define downButton 2
-#define owner 3
+#define NUM_FLOORS 4
+#define OPERATOR_BUTTON 0
+#define UP_BUTTON 1
+#define DOWN_BUTTON 2
+#define IS_RESPONSIBLE 3
 
-int request_matrix[numFloors][4];
+
 
 //Motor defines
-#define up 1;
-#define down -1;
-#define off 0
+#define UP 1;
+#define DOWN -1;
+#define OFF 0
 
 enum State {stateStartup, stateMove, stateOpenDoors, stateWait};
 
-#defien noFloor -1
-#define doorOpenTime_ms 5000
+#define NO_FLOOR -1
+#define DOOR_OPEN_TIME_MS 5000
 
-void stateMachine(){
-    State current_state = stateStartup;
-    int current_floor;
-    int last_floor;
-    bool move_dir = up;
+void a() {
+	bool requestMatrix[NUM_FLOORS][4];
+
+	int finishedREquest;
+	mutex finishedRequest_mutex;
+
+	thread t1(state_machine,requestMatrix,&finishedRequest,&finishedRequest_mutex)
+
+}
+
+//State machine leser fra requestMatrix, og kommuniserer tilbake gjennom finishREquest.
+void state_machine(const bool requestMatrix[NUM_FLOORS][], int& finishedRequest, mutex finishedRequest_mutex){
+    State currentState = stateStartup;
+	bool atFLoor;
+    int latestFloor;
+    bool moveDir = UP; //NB move dir må være 1 eller -1, ikke 0. Altså siste retning vi gikk i.
     
     while(1){
-        current_floor = readFloor();    //From elevator controll
+		int floorReadout = elev_get_floor_sensor_signal();
+		if (floorReadout != NO_FLOOR) {
+			latestFloor = floorReadout;
+			atFloor = 1;
+		}
+		else {
+			atFloor = 0;
+		}
+
+		elev_set_floor_indicator(latestFloor);
         
-        if(current_floor != noFloor){
-            last_floor = current_floor;
-        }
-        
-        setFloorIndicator(last_floor);  //elevator controll
-        
-        switch(current_state){
+        switch(currentState){
             case(stateStartup):
-                motor.setDir(up);       //elevator controll
-                if(current_floor != noFloor){
-                    motor.setDir(off);
-                    current_state = stateWait;
+				elev_set_motor_direction(UP); 
+                if(atFloor){
+					elev_set_motor_direction(OFF);
+                    currentState = stateWait;
                 }
             break;
+
+			case(stateWait):
+				if (request_on_floor(currentFloor)) {
+					curent_state = stateOpenDoors;
+				}
+				else if (request_in_dir(moveDir, currentFloor)) {
+					currentState = stateMove;
+				}
+				else if (request_in_dir(-moveDir, currentFloor)) {
+					moveDir *= -1;
+					currentState = stateMove;
+				}
+			break;
             
-            case(stateMove):
-                motor.setDir(up);
-                if(check_stop(current_floor, move_dir)){
-                    current_state = stateOpenDoors;
+			case(stateMove) :
+				elev_set_motor_direction(moveDir);
+                if(atFloor && check_stop(currentFloor, moveDir)){
+                    currentState = stateOpenDoors;
+                }
+                if(!requestInDir(moveDir,latestFloor)){
+					elev_set_motor_direction(OFF);
+                    currentState = stateWait;
                 }
             break;
             
             case(stateOpenDoors):
-                motor.setDir(off);
-                popRequest(current_floor);
+				elev_set_motor_direction(OFF);
+				
+				finishedRequest_mutex.lock();
+				finishedRequest(latestFloor);
+				finishedRequest_mutex.unlock();
                 
                 //Door cycle
-                doors.open(1);      //elevator controll
-                _delay_ms(doorOpenTime_ms);
-                doors.open(0);
-                current_state = stateWait;
+				elev_set_door_open_lamp(1);
+                _delay_ms(DOOR_OPEN_TIME_MS);
+				elev_set_door_open_lamp(0);
+                currentState = stateWait;
             break;
-            
-            case(stateWait):
-                if(requestOnFloor(current_floor)){
-                    curent_state = stateOpenDoors;
-                }
-                else if(requestInDir(move_dir, current_floor)){
-                    current_state = stateMove;
-                }
-                else if(requestInDir(-move_dir,current_floor)){
-                    move_dir = -move_dir;
-                    current_state = stateMove;
-                }
-            break;
+           
             
         }
     }
 }
 
-int motorToMatrixDir(int motorDir){
-    if(move_dir == down){
-        return downButton;
+int motor_dir_to_matrix_dir(int motorDir){
+    if(moveDir == DOWN){
+        return DOWN_BUTTON;
     }
-    if(move_dir == up){
-        return upButton;
+    if(moveDir == UP){
+        return UP_BUTTON;
     }
 }
 
-bool check_stop(int current_floor,int move_dir){
-    if(current_floor < 0){
-        cout << "ERROR";
-    }
-    
+bool check_stop(int currentFloor,int moveDir){
+  
     //Om noen inne i heisen vil av
-    if(request_matrix[current_floor][operatorButton]){
+    if(requestMatrix[currentFloor][OPERATOR_BUTTON]){
         return true;
     }
     //om det er vår oppgave å hente noen på denne etasjoen
-    else if(request_matrix[current_floor][owner]==elevatorID){
+    else if(requestMatrix[currentFloor][OWNER]==elevatorID){
         //hvis vi uansett er på vei denne veien
-        if(request_matrix[current_floor][motorToMatrixDir(move_dir)]){
+        if(requestMatrix[currentFloor][motor_dir_to_matrix_dir(moveDir)]){
             return true;
         }
         //om vi er ferdig med denne retningen, og kan ta med folk den andre veien
-        else if(request_matrix[current_floor][motorToMatrixDir(-move_dir)] && !requestInDir(move_dir,current_floor)){
+        else if(!request_in_dir(moveDir, currentFloor) && requestMatrix[currentFloor][motor_dir_to_matrix_dir(-moveDir)]){
             return true;
         }   
     }
     return false;
 }
 
-bool requestOnFloor(int current_floor){
-    if(request_matrix[current_floor][operatorButton]){
+bool request_on_floor(int currentFloor){
+    if(requestMatrix[currentFloor][OPERATOR_BUTTON]){
         return true;
     }
     //om det er vår oppgave å hente noen på denne etasjoen
-    else if(request_matrix[current_floor][owner]==elevatorID){
-        return request_matrix[current_floor][upButton] || request_matrix[current_floor][downButton]
+    else if(requestMatrix[currentFloor][IS_RESPONSIBLE]){
+        return requestMatrix[currentFloor][UP_BUTTON] || requestMatrix[currentFloor][DOWN_BUTTON]
     }
     return false;
 }
 
-bool requestInDir(int move_dir,int current_floor){
-    if(move_dir==up){
-        for(int floor=current_floor+1;floor<numFloors;++floor){
-            if(request_matrix[floor][operatorButton] || request_matrix[floor][upButton] || request_matrix[floor][downButton]){
+bool request_in_dir(int moveDir,int currentFloor){
+    if(moveDir==UP){
+        for(int floor=currentFloor+1;floor<NUM_FLOORS;++floor){
+            if(requestMatrix[floor][OPERATOR_BUTTON] || requestMatrix[floor][IS_RESPONSIBLE] && (requestMatrix[floor][UP_BUTTON] || requestMatrix[floor][DOWN_BUTTON])){
                 return true;
             }
         }
     }
-    else if(move_dir==down){
-        for(int i=current_floor-1; i>=0; --i){
-            if(request_matrix[floor][operatorButton] || request_matrix[floor][upButton] || request_matrix[floor][downButton]){
+    else if(moveDir==DOWN){
+        for(int i=currentFloor-1; i>=0; --i){
+            if(requestMatrix[floor][OPERATOR_BUTTON] || requestMatrix[floor][IS_RESPONSIBLE] && (requestMatrix[floor][UP_BUTTON] || requestMatrix[floor][DOWN_BUTTON])){
                 return true;
             }
         }
     }
     return false;
-}
-
-bool popRequest(int current_floor){
-    //kommuniserer til gouvernøren at vi har hentet passasjerene på denne etasjen
 }
