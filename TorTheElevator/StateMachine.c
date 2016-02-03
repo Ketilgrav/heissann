@@ -7,7 +7,7 @@
 #define downButton 2
 #define owner 3
 
-int request_matrix[numFloors][4];
+
 
 //Motor defines
 #define up 1;
@@ -16,10 +16,10 @@ int request_matrix[numFloors][4];
 
 enum State {stateStartup, stateMove, stateOpenDoors, stateWait};
 
-#defien noFloor -1
+#define noFloor -1
 #define doorOpenTime_ms 5000
 
-void stateMachine(){
+void stateMachine(int& request_matrix[numFloors][4];){
     State current_state = stateStartup;
     int current_floor;
     int last_floor;
@@ -47,6 +47,9 @@ void stateMachine(){
                 motor.setDir(up);
                 if(check_stop(current_floor, move_dir)){
                     current_state = stateOpenDoors;
+                }
+                if(reuestInDir(move_dir,last_floor)){
+                    current_state = stateWait;
                 }
             break;
             
