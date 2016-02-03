@@ -23,7 +23,7 @@ enum State {stateStartup, stateMove, stateOpenDoors, stateWait};
 #define DOOR_OPEN_TIME_MS 5000
 
 void a() {
-	bool requestMatrix[NUM_FLOORS][4]; 
+	bool requestMatrix[NUM_FLOORS][4];
 
 	int finishedREquest;
 	mutex finishedRequest_mutex;
@@ -78,7 +78,7 @@ void state_machine(const bool requestMatrix[NUM_FLOORS][], int& finishedRequest,
                 if(atFloor && check_stop(currentFloor, moveDir)){
                     currentState = stateOpenDoors;
                 }
-                 if(!requestInDir(moveDir,latestFloor) && atFloor){
+                if(!requestInDir(moveDir,latestFloor)){
 					elev_set_motor_direction(OFF);
                     currentState = stateWait;
                 }
