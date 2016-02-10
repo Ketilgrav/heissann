@@ -33,7 +33,7 @@ void a() {
 }
 
 //State machine leser fra requestMatrix, og kommuniserer tilbake gjennom finishREquest.
-void state_machine(const bool requestMatrix[NUM_FLOORS][], int& finishedRequest, mutex finishedRequest_mutex){
+void state_machine(const bool requestMatrix[NUM_FLOORS][3], int& finishedRequest, mutex finishedRequest_mutex){
     State currentState = stateStartup;
 	bool atFLoor;
     int latestFloor;
