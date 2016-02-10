@@ -15,7 +15,7 @@ program_OBJS += $(program_CXX_OBJS)
 
 
 program_LIBRARY_DIRS := $(current_dir) $(current_dir)/headers/ $(current_path)/headers/
-program_LIBRARIES := comedi m pthread
+program_LIBRARIES :=  m comedi pthread
 
 CXXFLAGS += -Wall -g -std=c++11
 CFLAGS += -Wall -g -std=c99
