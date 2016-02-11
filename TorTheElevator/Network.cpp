@@ -1,19 +1,6 @@
 #include "Network.h"
 
-enum MessageType{
-	messageRequest = 0;
-	messageComplete =1;
-};
-
-struct message{
-	MessageType messageType; //1bit
-	uint8_t floor;
-	uint8_t button;
-	uint16_t price;
-};
-
-
-void network_recieve_thread(message* msgInn, mutex* msgInn_mutex, bool* newMessage, mutex* newMessage_mutex){
+void network_reciever(message* msgInn, mutex* msgInn_mutex, bool* newMessage){
 	while(1){
 
 	}

@@ -3,37 +3,15 @@
 
 using namespace std;
 
-//Request matrisa burde ikke ligge her
-#define NUM_FLOORS 4
-#define OPERATOR_BUTTON 0
-#define UP_BUTTON 1
-#define DOWN_BUTTON 2
-#define IS_RESPONSIBLE 3
 
-
-
-//Motor defines
-#define UP 1;
-#define DOWN -1;
-#define OFF 0
 
 enum State {stateStartup, stateMove, stateOpenDoors, stateWait};
 
 #define NO_FLOOR -1
 #define DOOR_OPEN_TIME_MS 5000
 
-void a() {
-	bool requestMatrix[NUM_FLOORS][4];
-
-	int finishedREquest;
-	mutex finishedRequest_mutex;
-
-	thread t1(state_machine,requestMatrix,&finishedRequest,&finishedRequest_mutex)
-
-}
-
 //State machine leser fra requestMatrix, og kommuniserer tilbake gjennom finishREquest.
-void state_machine(const bool requestMatrix[NUM_FLOORS][3], int& finishedRequest, mutex finishedRequest_mutex){
+void state_machine(const bool requestMatrix[NUM_FLOORS][REQUEST_MATRIX_WIDTH], int& finishedRequest, mutex finishedRequest_mutex){
     State currentState = stateStartup;
 	bool atFLoor;
     int latestFloor;
@@ -112,7 +90,7 @@ int motor_dir_to_matrix_dir(int motorDir){
     }
 }
 
-bool check_stop(int currentFloor,int moveDir){
+bool check_stop(const bool requestMatrix[NUM_FLOORS][REQUEST_MATRIX_WIDTH], int currentFloor,int moveDir){
   
     //Om noen inne i heisen vil av
     if(requestMatrix[currentFloor][OPERATOR_BUTTON]){
@@ -132,7 +110,7 @@ bool check_stop(int currentFloor,int moveDir){
     return false;
 }
 
-bool request_on_floor(int currentFloor){
+bool request_on_floor(const bool requestMatrix[NUM_FLOORS][REQUEST_MATRIX_WIDTH], int currentFloor){
     if(requestMatrix[currentFloor][OPERATOR_BUTTON]){
         return true;
     }
@@ -143,7 +121,7 @@ bool request_on_floor(int currentFloor){
     return false;
 }
 
-bool request_in_dir(int moveDir,int currentFloor){
+bool request_in_dir(const bool requestMatrix[NUM_FLOORS][REQUEST_MATRIX_WIDTH], int moveDir,int currentFloor){
     if(moveDir==UP){
         for(int floor=currentFloor+1;floor<NUM_FLOORS;++floor){
             if(requestMatrix[floor][OPERATOR_BUTTON] || requestMatrix[floor][IS_RESPONSIBLE] && (requestMatrix[floor][UP_BUTTON] || requestMatrix[floor][DOWN_BUTTON])){
