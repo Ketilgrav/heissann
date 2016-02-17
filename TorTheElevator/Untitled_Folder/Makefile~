@@ -14,11 +14,12 @@ program_OBJS := $(program_C_OBJS)
 program_OBJS += $(program_CXX_OBJS)
 
 
-program_LIBRARY_DIRS := $(current_dir) $(current_dir)/headers/ $(current_path)/headers/
+program_LIBRARY_DIRS := 
+program_INCLUDE_DIRS := $(current_dir) $(current_dir)/headers/ $(current_path)/headers/
+
 program_LIBRARIES := comedi m pthread
 
 CXXFLAGS += -Wall -g -std=c++11
-CFLAGS += -Wall -g -std=c99
 
 CPPFLAGS += $(foreach includedir,$(program_INCLUDE_DIRS),-I$(includedir))
 LDFLAGS += $(foreach librarydir,$(program_LIBRARY_DIRS),-L$(librarydir))
@@ -31,7 +32,7 @@ $(program_CXX_OBJS):%.o:%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(CPPFLAGS) $(LDFLAGS)
 
 $(program_C_OBJS):%.o:%.c
-	$(CXX) $(CFLAGS) -c $< -o $@ $(CPPFLAGS) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@ $(CPPFLAGS) $(LDFLAGS)
 
 $(program_EXECUTABLE):$(program_OBJS)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -o $(program_EXECUTABLE) $(program_OBJS) $(LDFLAGS)
