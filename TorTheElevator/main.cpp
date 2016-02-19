@@ -11,6 +11,11 @@ using namespace std;
 
 
 int main(){
+	UDP messageInn();
+	messageInn.msg(flor, button, price, sendtype);
+
+
+
 	bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH];
 	int finishedFloor;
 	mutex finishedFloorMutex;

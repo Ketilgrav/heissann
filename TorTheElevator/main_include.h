@@ -1,11 +1,15 @@
 #pragma once
 
+#include <unistd.h>
+
 #define N_BUTTONS 3
 #define REQUEST_MATRIX_WIDTH (N_BUTTONS+1)
 #define N_FLOORS 4
 
 #define TIMEOUT_COST_SCALER 1
 #define TIME_INF 0xffffffff
+
+
 
 enum MotorDirection { 
     motorDown = -1,
@@ -24,7 +28,7 @@ enum MessageType{
 	messageComplete =1;
 };
 
-struct message{
+struct Message{
 	MessageType messageType; //1bit
 	uint8_t floor;
 	uint8_t button;

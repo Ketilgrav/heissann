@@ -59,8 +59,7 @@ bool UDP_checksum(){ //DUMMY!
 }
 
 int UDP_send(int socket, void* message, sockaddr_in* sendAddress){
-	if ( sendto(socket, message, 1024, 
-	 0, (struct sockaddr *)sendAddress, sizeof(*sendAddress)) < 0){
+	if ( sendto(socket, message, 1024, 0, (struct sockaddr *)sendAddress, sizeof(*sendAddress)) < 0){
 		perror("Sending failed tho");
 		return -1;
 	}
@@ -68,10 +67,9 @@ int UDP_send(int socket, void* message, sockaddr_in* sendAddress){
 }
 
 int UDP_recieve(int socket, void* buffer, int buffer_size, sockaddr_in* senderAdress, socklen_t* senderAdressLength){
-	ssize_t receiveMessageLength;
+	//ssize_t receiveMessageLength;
 	memset(buffer, 0, buffer_size);
-	if(	(receiveMessageLength = recvfrom(socket, buffer, buffer_size,
-	 0, (struct sockaddr *)senderAdress, senderAdressLength)) <= 0){
+	if(	recvfrom(socket, buffer, buffer_size, 0, (struct sockaddr *)senderAdress, senderAdressLength) <= 0){
 		perror("Receive failed yo");
 		return -1;
 	}
