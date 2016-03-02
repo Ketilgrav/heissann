@@ -14,11 +14,21 @@ int listenPort = 20013;
 int sendPort = 20013;
 int listenSock, sendSock;
 ssize_t receiveMsgLength;
-unsigned char buffer[BUF_SIZE];
-char sendIP[] = "129.241.187.255";
-char msg[22] = "What up torstein??";
+
+//unsigned char buffer[BUF_SIZE];
+
+char sendIP[] = "129.241.187.152";
+struct teststruct {
+ 	std::string a = "bla";
+ 	int b = 5;
+ }; 
 
 int main(){
+	teststruct msg;
+	msg.a = "hei";
+	msg.b = 19;
+
+	teststruct buffer;
 
 	//Initialize socket adresses
 	struct sockaddr_in listenAddr;
@@ -59,18 +69,24 @@ int main(){
 
 	while(1){
 		//Send message
-		printf("Sent: %s\n", msg);
-		if (sendto(sendSock, msg, strlen(msg), 0, (struct sockaddr *)&sendAddr, sendAddrLength) < 0){
+		msg.a[1]++;
+		msg.b++;
+		std::cout << "Sent: " << msg.a << std::endl;
+		printf("Sent: %i\n", msg.b);
+		if (sendto(sendSock, &msg, sizeof(msg), 0, (struct sockaddr *)&sendAddr, sendAddrLength) < 0){
 				perror("Sending socket failed");
 				return -1;
 		}
+		printf("test\n");
 		//receive
-		receiveMsgLength = recvfrom(listenSock, buffer, BUF_SIZE, 0, (struct sockaddr *)&serverAddr, &serverAddrLength);
-		printf("received: %s\n", buffer);
+		receiveMsgLength = recvfrom(listenSock, &buffer, sizeof(buffer), 0, (struct sockaddr *)&serverAddr, &serverAddrLength);
+		printf("msglen: %li\n", receiveMsgLength);
+		std::cout << "REasda: " << buffer.a << std::endl;
+		printf("received: %i\n", buffer.b);
 		printf("From IP: %s\n\n", inet_ntoa(serverAddr.sin_addr));
 
 		//Clear message
-		memset(buffer,0,sizeof(buffer));
+		memset(&buffer,0,sizeof(buffer));
 		sleep(1);
 	}
 	return 0;

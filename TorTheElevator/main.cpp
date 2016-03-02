@@ -9,9 +9,13 @@
 
 using namespace std;
 
+#define RECEIVE_PORT 30000
+#define SEND_PORT 30000
+#define BROADCAST_IP "129.241.187.255";
+
 
 int main(){
-	NetworkMessage network(/*Her må vi ha med porter, ipadresse og alt som hindrer oss fra å ha flere instanser*/);
+	NetworkMessage network(RECEIVE_PORT,SEND_PORT,BROADCAST_IP);
 	
 	bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH];
 	atomic<int> finishedFloor;
