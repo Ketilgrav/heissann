@@ -51,7 +51,7 @@ void elev_set_motor_direction(MotorDirection direction) {
 }
 
 
-void elev_update_button_lamps(const bool requestMatrix[N_FLOORS][N_BUTTONS]) {
+void elev_set_button_lamp(const bool requestMatrix[N_FLOORS][N_BUTTONS]) {
 	for (int floor = 0; floor < N_FLOORS; floor++) {
         for (int button = 0; button < N_BUTTONS; button++){
         	io_write_bit(lamp_channel_matrix[floor][button], requestMatrix[floor][button]);
@@ -61,11 +61,11 @@ void elev_update_button_lamps(const bool requestMatrix[N_FLOORS][N_BUTTONS]) {
 
 void elev_set_floor_indicator(int floor) {
     // Binary encoding. One light must always be on.
-    io_write_bit(LIGHT_FLOOR_IND1,floor & 0b10);
-	io_write_bit(LIGHT_FLOOR_IND2,floor & 0b01);    
+    io_write_bit(LIGHT_FLOOR_IND1,floor>>1);
+	io_write_bit(LIGHT_FLOOR_IND2,floor & 0b01);
 }
 
-void elev_update_button_press(bool buttonPressMatrix[N_FLOORS][N_BUTTONS]) {
+void elev_get_button_signal(bool buttonPressMatrix[N_FLOORS][N_BUTTONS]) {
     
     for (int floor = 0; floor < N_FLOORS; floor++) {
         for (int button = 0; button < N_BUTTONS; button++){

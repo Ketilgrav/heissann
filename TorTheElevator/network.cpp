@@ -1,4 +1,4 @@
-#include "Network.h"
+#include "network.h"
 
 
 void NetworkMessage::UDP_init_socket_recieve(){
