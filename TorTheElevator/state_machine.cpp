@@ -11,7 +11,7 @@ enum State {stateStartup, stateMove, stateOpenDoors, stateWait};
 #define DOOR_OPEN_TIME_MS 5000
 
 //State machine leser fra requestMatrix, og kommuniserer tilbake gjennom finishREquest.
-void state_machine(const bool requestMatrix[NUM_FLOORS][REQUEST_MATRIX_WIDTH], int& finishedRequest, mutex finishedRequest_mutex){
+void state_machine(const bool requestMatrix[NUM_FLOORS][REQUEST_MATRIX_WIDTH], atomic<int>& finishedRequest){
     State currentState = stateStartup;
 	bool atFLoor;
     int latestFloor;
@@ -65,9 +65,7 @@ void state_machine(const bool requestMatrix[NUM_FLOORS][REQUEST_MATRIX_WIDTH], i
             case(stateOpenDoors):
 				elev_set_motor_direction(OFF);
 				
-				finishedRequest_mutex.lock();
-				finishedRequest(latestFloor);
-				finishedRequest_mutex.unlock();
+				finishedRequest = latestFloor;
                 
                 //Door cycle
 				elev_set_door_open_lamp(1);
