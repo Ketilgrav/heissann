@@ -2,6 +2,10 @@
 
 #define N_BUTTONS 3
 #define N_FLOORS 4
+#define REQUEST_MATRIX_WIDTH 4
+
+#include <stdint.h>
+#include <time.h>
 
 enum MotorDirection { 
     motorDown = -1,
@@ -14,6 +18,7 @@ enum ButtonType {
     buttonDown = 1,
     buttonCommand = 2
 };
+#define IS_RESPONSIBLE 3
 
 enum MessageType{
 	messageRequest = 0,
@@ -28,3 +33,6 @@ struct Message{
 	time_t sendTime;
 	uint8_t checkSum;
 };
+
+#define TIME_INF -1
+#define TIMEOUT_COST_SCALER 1

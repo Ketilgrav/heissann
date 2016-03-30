@@ -28,7 +28,7 @@ void NetworkMessage::UDP_init_socket_receive(){
 void NetworkMessage::UDP_init_socket_send(){
 	sendAddress.sin_family = AF_INET;
 	sendAddress.sin_port = htons(sendPort);
-	inet_aton(broadcastIP, &sendAddress.sin_addr);
+	inet_aton(broadcastIp, &sendAddress.sin_addr);
 
 	//Initialize and set up sendSocket
 	if ( (sendSocket = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
@@ -51,17 +51,17 @@ void NetworkMessage::UDP_init_socket_send(){
 }
 
 
-bool NetworkMessage::UDP_checksum(Message* msg){ //DUMMY!
-	return ((msg->msgType+msg->floor+msg->button+msg->price+msg->sendTime+msg->checkSum)%255 == 0);
+bool NetworkMessage::UDP_checksum(){
+	return ((receiveMsg.msgType+receiveMsg.floor+receiveMsg.button+receiveMsg.price+receiveMsg.sendTime+receiveMsg.checkSum)%255 == 0);
 }
 
-void NetworkMessage::UDP_make_checksum(Message* msg){
-	msg->checkSum = 255 - (msg->msgType+msg->floor+msg->button+msg->price+msg->sendTime)%255;
+void NetworkMessage::UDP_make_checksum(){
+	sendMsg.checkSum = 255 - (sendMsg.msgType+sendMsg.floor+sendMsg.button+sendMsg.price+sendMsg.sendTime)%255;
 }
 
 bool NetworkMessage::UDP_send(){
-	int sentBytes;
-	if ( sentBytes = sendto(sendSocket, sendMsg, sizeof(sendMsg), 0, (struct sockaddr *)sendAddress, sizeof(*sendAddress)) < 0){
+	ssize_t sentBytes = sendto(sendSocket, &sendMsg, sizeof(sendMsg), 0, (struct sockaddr *)&sendAddress, sizeof(sendAddress));
+	if (sentBytes < 0){
 		perror("Sending failed");
 		return 0;
 	}
@@ -72,9 +72,25 @@ bool NetworkMessage::UDP_send(){
 	return 1;
 }
 
+void NetworkMessage::send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime){
+	sendMsg.floor = floor;
+	sendMsg.msgType = msgType;
+	sendMsg.button = button;
+	sendMsg.price = price;
+	sendMsg.sendTime = sendTime;
+	UDP_make_checksum();
+	UDP_send();
+}
+
+void NetworkMessage::send_message(const Message* msgOut){
+	sendMsg = *msgOut;
+	UDP_make_checksum();
+	UDP_send();
+}
+
 bool NetworkMessage::UDP_receive(){
 	//Legg til, beskjeden forkastes om checksum er false, eller tiden har gått ut
-	int recvBytes = recvfrom(receiveSocket, receiveMsg, sizeof(receiveMsg), 0, nullptr, NULL);
+	ssize_t recvBytes = recvfrom(receiveSocket, &receiveMsg, sizeof(receiveMsg), 0, nullptr, NULL);
 	if(recvBytes == 0){
 		perror("Receive connection closed remotely");
 		sleep(2);
@@ -84,7 +100,7 @@ bool NetworkMessage::UDP_receive(){
 		//Error from socket
 	else if (recvBytes == -1){
 		//No data on socket
-		if (errno == EWOULDBLOCK || EAGAIN){
+		if (errno == EWOULDBLOCK || errno == EAGAIN){
 			return 0;
 		}
 		else{
@@ -97,29 +113,24 @@ bool NetworkMessage::UDP_receive(){
 	return 1;
 }
 
-void NetworkMessage::send_message(){
-	//add checksum
-	//
-}
-
 bool NetworkMessage::receive_message(){
 	if(!UDP_receive()){
 		return 0;
 	}
-	if(!UDP_checksum(receiveMsg)){
+	if(!UDP_checksum()){
 		return 0;
 	}
-	if(receiveMsg.sendTime+TIMEOUT_TIME < time(NOW)){
+	if(receiveMsg.sendTime + TIMEOUT_TIME < time(NULL)){
 		return 0;
 	}
 	return 1;
 }
 
 
-NetworkMessage::NetworkMessage(int receivePort, int sendPort, char broadcastIp[]){
+NetworkMessage::NetworkMessage(int receivePort, int sendPort, const char broadcastIp[]){
 	this->receivePort = receivePort;
 	this->sendPort = sendPort;
-	this->broadcastIp = broadcastIp;
-	UDP_init_socket_recieve();
+	strcpy(this->broadcastIp, broadcastIp);
+	UDP_init_socket_receive();
 	UDP_init_socket_send();
 }

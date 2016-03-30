@@ -51,7 +51,7 @@ void elev_set_motor_direction(MotorDirection direction) {
 }
 
 
-void elev_set_button_lamp(const bool requestMatrix[N_FLOORS][N_BUTTONS]) {
+void elev_set_button_lamp(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH]) {
 	for (int floor = 0; floor < N_FLOORS; floor++) {
         for (int button = 0; button < N_BUTTONS; button++){
         	io_write_bit(lamp_channel_matrix[floor][button], requestMatrix[floor][button]);

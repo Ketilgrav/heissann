@@ -8,9 +8,11 @@
 #include <iostream>		// Cin
 #include <thread>
 #include <mutex>
+#include <unistd.h>
+#include <sys/fcntl.h>
 #include "main_include.h"
 
-#define TIMEOUT_TIME 5;
+const time_t TIMEOUT_TIME = 5;
 
 class NetworkMessage
 {
@@ -31,17 +33,18 @@ private:
 	void UDP_init_socket_receive();
 	void UDP_init_socket_send();
 
-	bool UDP_checksum(); //DUMMY!
+	bool UDP_checksum();
+	void UDP_make_checksum();
 
 	bool UDP_send();
 	bool UDP_receive();
 
 public:
-	NetworkMessage(int receivePort, int sendPort, char broadcastIp[]);
-	void send_message(const Message& msgOut);
+	NetworkMessage(int receivePort, int sendPort, const char broadcastIp[]);
+	void send_message(const Message* msgOut);
 	void send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime);
 
 	bool receive_message();
-	const Message* get_message(){ return receiveMsg;}
+	const Message* get_message(){ return &receiveMsg;}
 };
 
