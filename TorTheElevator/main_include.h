@@ -16,9 +16,9 @@ enum MotorDirection {
 enum ButtonType { 
 	buttonUp = 0,
     buttonDown = 1,
-    buttonCommand = 2
+    buttonOperator = 2
 };
-#define IS_RESPONSIBLE 3
+#define REQUEST_MATRIX_RESPONSIBILITY 3
 
 enum MessageType{
 	messageRequest = 0,
@@ -36,3 +36,7 @@ struct Message{
 
 #define TIME_INF -1
 #define TIMEOUT_COST_SCALER 1
+
+#define NO_FLOOR -1
+#define DOOR_OPEN_TIME_S 5
+#define DOOR_OPEN_TIME_uS DOOR_OPEN_TIME_S*1000000

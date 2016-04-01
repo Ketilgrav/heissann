@@ -6,13 +6,18 @@
 #include "elevator_controll.h"
 #include "network.h"
 #include "state_machine.h"
+#include <string>
 
 
 using namespace std;
 
+#define STARTUP_SLEEP_S 3
+
 #define RECEIVE_PORT 30000
 #define SEND_PORT 30000
 const char BROADCAST_IP[16] = "129.241.187.255";
+
+#define MY_FILENAME "tor.out"
 
 int calculate_cost(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor, int button, int latestFloor) {
 	int cost = abs(floor - latestFloor);
@@ -30,19 +35,19 @@ int calculate_cost(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int
 
 void handle_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor, int button, unsigned int externalCost, time_t requestTimeoutMatrix[N_FLOORS], NetworkMessage* networkConnection, int latestFloor){
 	requestMatrix[floor][button] = 1;
-	if(button == buttonCommand){
-		requestMatrix[floor][IS_RESPONSIBLE] = 1;
+	if(button == buttonOperator){
+		requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 1;
 	}
 	else{
 		int cost = calculate_cost(requestMatrix, floor, button, latestFloor);
 		if(cost < externalCost){
 			requestTimeoutMatrix[floor] = time(NULL) + cost*TIMEOUT_COST_SCALER;
 			networkConnection->send_message(messageRequest, floor, button, cost, time(NULL));
-			requestMatrix[floor][IS_RESPONSIBLE] = 1;
+			requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 1;
 		}
 		else{
 			requestTimeoutMatrix[floor] = time(NULL) + externalCost*TIMEOUT_COST_SCALER;
-			requestMatrix[floor][IS_RESPONSIBLE] = 0;
+			requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 0;
 		}
 
 	}
@@ -64,10 +69,19 @@ void clear_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor
 }
 
 
-
+void abort(int code){
+	//Kjør en instanse til av dette programmet.
+	string command ="gnome-terminal -x sh -c ./";
+	command += MY_FILENAME;
+	system(command);
+	exit(code);
+}
 
 
 int main(){
+	//Delayer slik at forrige instans av programmet rekker å stoppe helt.
+	sleep(STARTUP_SLEEP_S);
+
 	NetworkMessage network(RECEIVE_PORT,SEND_PORT, BROADCAST_IP);
 
 	bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH];

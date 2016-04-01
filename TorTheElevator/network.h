@@ -12,7 +12,9 @@
 #include <sys/fcntl.h>
 #include "main_include.h"
 
-const time_t TIMEOUT_TIME = 5;
+
+
+const time_t TIMEOUT_TIME = DOOR_OPEN_TIME_S;
 
 class NetworkMessage
 {
