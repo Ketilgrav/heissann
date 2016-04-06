@@ -37,6 +37,11 @@ struct Message{
 #define TIME_INF -1
 #define TIMEOUT_COST_SCALER 1
 
-#define NO_FLOOR -1
-#define DOOR_OPEN_TIME_S 5
+#define DOOR_OPEN_TIME_S 1
 #define DOOR_OPEN_TIME_uS DOOR_OPEN_TIME_S*1000000
+
+//int calculate_cost(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor, int button, int latestFloor);
+//void handle_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor, int button, unsigned int externalCost, time_t requestTimeoutMatrix[N_FLOORS], NetworkMessage* networkConnection, int latestFloor);
+//void clear_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor, bool handledByThisElevator, time_t requestTimeoutMatrix[N_FLOORS], NetworkMessage* networkConnection);
+
+void abort(int code);

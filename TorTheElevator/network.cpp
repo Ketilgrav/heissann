@@ -60,6 +60,7 @@ void NetworkMessage::UDP_make_checksum(){
 }
 
 bool NetworkMessage::UDP_send(){
+	std::cout<< "haha"<<std::endl;
 	ssize_t sentBytes = sendto(sendSocket, &sendMsg, sizeof(sendMsg), 0, (struct sockaddr *)&sendAddress, sizeof(sendAddress));
 	if (sentBytes < 0){
 		perror("Sending failed");
@@ -90,6 +91,7 @@ void NetworkMessage::send_message(const Message* msgOut){
 
 bool NetworkMessage::UDP_receive(){
 	//Legg til, beskjeden forkastes om checksum er false, eller tiden har gått ut
+
 	ssize_t recvBytes = recvfrom(receiveSocket, &receiveMsg, sizeof(receiveMsg), 0, nullptr, NULL);
 	if(recvBytes == 0){
 		perror("Receive connection closed remotely");
@@ -98,17 +100,18 @@ bool NetworkMessage::UDP_receive(){
 		return 0;
 	}
 		//Error from socket
-	else if (recvBytes == -1){
+	else if (recvBytes == -1) {
 		//No data on socket
-		if (errno == EWOULDBLOCK || errno == EAGAIN){
+		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return 0;
 		}
-		else{
+		else {
 			perror("Receive failed");
 			sleep(2);
 			abort(1);
 			return 0;
 		}
+
 	}
 	return 1;
 }

@@ -30,7 +30,6 @@ private:
 
 	Message sendMsg;
 	Message receiveMsg;
-	bool newMsg;
 
 	void UDP_init_socket_receive();
 	void UDP_init_socket_send();

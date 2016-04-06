@@ -11,3 +11,4 @@ void elev_get_button_signal(bool buttonPressMatrix[N_FLOORS][N_BUTTONS]);
 int elev_get_floor_sensor_signal(void);
 void elev_set_door_open_lamp(int value);
 
+#define NO_FLOOR -1

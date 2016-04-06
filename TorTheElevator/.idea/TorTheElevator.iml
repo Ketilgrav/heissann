@@ -2,17 +2,13 @@
 <module type="CPP_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/network.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/network.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/main.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/state_machine.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/main.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/testElevContrl.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/io.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/elevator_controll.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/state_machine.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/network.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/elevator_controll.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/io.h" isTestSource="false" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library">

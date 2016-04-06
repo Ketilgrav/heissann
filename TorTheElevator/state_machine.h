@@ -6,8 +6,10 @@
 #include <unistd.h>
 #include "main_include.h"
 #include "elevator_controll.h"
+#include <iostream>
 
-void state_machine(const bool **requestMatrix, std::atomic<int>& finishedRequest, std::atomic<int>& latestFloor);
+
+void state_machine(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], std::atomic<int>* finishedRequest, std::atomic<int>* latestFloor);
 int motor_dir_to_matrix_dir(int motorDir);
 bool check_stop(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int currentFloor,int moveDir);
 bool request_on_floor(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int currentFloor);

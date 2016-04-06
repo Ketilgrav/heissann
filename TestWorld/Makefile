@@ -20,12 +20,11 @@ program_LIBRARY_DIRS :=
 program_INCLUDE_DIRS := $(current_path) $(current_path)/headers/
 program_LIBRARIES := comedi m pthread
 
-CXXFLAGS += -Wall -g -std=c++11 -fsanitize=address
+CXXFLAGS += -Wall -g -std=c++11
 
 CPPFLAGS += $(foreach includedir,$(program_INCLUDE_DIRS),-I$(includedir))
 LDFLAGS += $(foreach librarydir,$(program_LIBRARY_DIRS),-L$(librarydir))
 LDFLAGS += $(foreach library,$(program_LIBRARIES),-l$(library))
-LDFLAGS += -fsanitize=address
 
 .PHONY: all clean distclean
 all: $(program_EXECUTABLE)
