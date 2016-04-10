@@ -13,7 +13,7 @@ void NetworkMessage::UDP_init_socket_receive(){
 	if ( (receiveSocket = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
 		perror("Failed to create receiveSocket\n");
 		sleep(2);
-		abort(1);
+		exit(1);
 	}
 
 	fcntl(receiveSocket, F_SETFL, O_NONBLOCK); //Set non-blocking
@@ -21,7 +21,7 @@ void NetworkMessage::UDP_init_socket_receive(){
 	if (bind(receiveSocket, (struct sockaddr *)&receiveAddress, receiveAddressLength) < 0){
 		perror("Failed to bind receiveSocket");
 		sleep(2);
-		abort(1);
+		exit(1);
 	}
 }
 
@@ -34,19 +34,19 @@ void NetworkMessage::UDP_init_socket_send(){
 	if ( (sendSocket = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
 		perror("Socket not created\n");
 		sleep(2);
-		abort(1);
+		exit(1);
 	}
 	int broadcastPermission = 1;
 	if (setsockopt(sendSocket, SOL_SOCKET, SO_BROADCAST, (void *)&broadcastPermission, sizeof(broadcastPermission)) < 0){
 		perror("sendSocket broadcast enable failed");
 		sleep(2);
-		abort(1);
+		exit(1);
 	}
 	int reusePermission = 1;
 	if (setsockopt(sendSocket, SOL_SOCKET, SO_REUSEADDR, (void *)&reusePermission, sizeof(reusePermission)) < 0){
 		perror("sendSocket reuse address enable failed");
 		sleep(2);
-		abort(1);
+		exit(1);
 	}
 }
 
@@ -96,7 +96,7 @@ bool NetworkMessage::UDP_receive(){
 	if(recvBytes == 0){
 		perror("Receive connection closed remotely");
 		sleep(2);
-		abort(1);
+		exit(1);
 		return 0;
 	}
 		//Error from socket
@@ -108,7 +108,7 @@ bool NetworkMessage::UDP_receive(){
 		else {
 			perror("Receive failed");
 			sleep(2);
-			abort(1);
+			exit(1);
 			return 0;
 		}
 

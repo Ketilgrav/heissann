@@ -1,20 +1,13 @@
-#include <thread>
-#include <atomic>
-#include <time.h>
-#include <comedi.h>
 #include <fstream>
-#include <iostream>
 #include <string>
-
-#include "main_include.h"
-#include "elevator_controll.h"
-#include "network.h"
-#include "state_machine.h"
-#include "event_manager.h"
-
+#include <iostream>
+#include <time.h>
+#include <unistd.h>
 
 using namespace std;
 
+#define N_FLOORS 4
+#define REQUEST_MATRIX_WIDTH 4
 #define TIMEOUT 3
 
 void init(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], fstream* fMaster){
@@ -23,7 +16,7 @@ void init(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], fstream* fMaster){
     char chr;
     (*fMaster) >> t;
     fMaster->get(chr);
-    elev_init();
+    //elev_init();
     for(int floor=0;floor<N_FLOORS;++floor){
         for(int w=0;w<REQUEST_MATRIX_WIDTH;++w){
             if(fMaster->get(chr)){
@@ -39,7 +32,7 @@ void init(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], fstream* fMaster){
 }
 
 int main(){
-    bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH];
+	bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH];
     fstream fMaster;
     fMaster.open("requestMatrix.txt", fstream::in);
     if(!fMaster.is_open()){
@@ -82,8 +75,8 @@ int main(){
     atomic<int> finishedFloor(-1);
     atomic<int> latestFloor;
     thread state_machine_thread(state_machine, requestMatrix, &finishedFloor, &latestFloor);
-    thread event_manager_thread(event_manager, requestMatrix, &finishedFloor, &latestFloor);
 
+    
 
     fMaster.open("requestMatrix.txt", fstream::out);
     fSlave.open("slavePing.txt", fstream::in);

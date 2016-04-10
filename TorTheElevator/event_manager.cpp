@@ -1,10 +1,15 @@
-    
+#include "event_manager.h"
+#include "elevator_controll.h"
 
-    //Delayer slik at forrige instans av programmet rekker å stoppe helt.
-    //sleep(STARTUP_SLEEP_S);
-    cout << "hoho1\n";
+using namespace std;
+
+#define RECEIVE_PORT 20013
+#define SEND_PORT 20013
+const char BROADCAST_IP[16] = "129.241.187.255";
+
+
+void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH],atomic<int> *finishedFloor, atomic<int> *latestFloor){
     NetworkMessage network(RECEIVE_PORT,SEND_PORT, BROADCAST_IP);
-    cout << "hoho2\n";
     
 
     bool buttonPressMatrix[N_FLOORS][N_BUTTONS];
@@ -20,7 +25,7 @@
         for(int floor = 0; floor<N_FLOORS; ++floor){
             for (int button = 0; button < N_BUTTONS; ++button) {
                 if(buttonPressMatrix[floor][button] && !requestMatrix[floor][button]){
-                    handle_request(requestMatrix, floor, button, -1, requestTimeoutMatrix, &network, latestFloor,calculatedCost);
+                    handle_request(requestMatrix, floor, button, -1, requestTimeoutMatrix, &network, *latestFloor,calculatedCost);
                 }
             }
         }
@@ -29,7 +34,7 @@
         //if we recieve a message
         if(network.receive_message()){
             if(network.get_message()->msgType == messageRequest){
-                handle_request(requestMatrix, network.get_message()->floor, network.get_message()->button, network.get_message()->price, requestTimeoutMatrix,&network,latestFloor,calculatedCost);
+                handle_request(requestMatrix, network.get_message()->floor, network.get_message()->button, network.get_message()->price, requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
             }
             //We recieved a visited floor.
             else if(network.get_message()->msgType == messageComplete){
@@ -43,10 +48,10 @@
             if(requestTimeoutMatrix[floor] < time(NULL)){
                 //Arbitrarily gives priority on button up, will this be a problem?
                 if(requestMatrix[floor][buttonUp]){
-                    handle_request(requestMatrix, floor, buttonUp, -1, requestTimeoutMatrix,&network,latestFloor,calculatedCost);
+                    handle_request(requestMatrix, floor, buttonUp, -1, requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
                 }
                 else if(requestMatrix[floor][buttonDown]){
-                    handle_request(requestMatrix, floor, buttonDown, -1, requestTimeoutMatrix,&network,latestFloor,calculatedCost);
+                    handle_request(requestMatrix, floor, buttonDown, -1, requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
                 }
                 else{
                     //Om vi timet ut på en operator button
@@ -57,9 +62,9 @@
         }
 
         //If we have finished a floor
-        if(finishedFloor >= 0 && finishedFloor<=N_FLOORS){
-            clear_request(requestMatrix,finishedFloor,1,requestTimeoutMatrix,&network);
-            finishedFloor = -1;
+        if((*finishedFloor) >= 0 && (*finishedFloor)<=N_FLOORS){
+            clear_request(requestMatrix,*finishedFloor,1,requestTimeoutMatrix,&network);
+            (*finishedFloor) = -1;
         }
 
     }
