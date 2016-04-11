@@ -35,7 +35,7 @@ struct Message{
 };
 
 #define TIME_INF -1
-#define TIMEOUT_COST_SCALER 1
+#define TIMEOUT_TIME 25
 
 #define DOOR_OPEN_TIME_S 1
 #define DOOR_OPEN_TIME_uS DOOR_OPEN_TIME_S*1000000

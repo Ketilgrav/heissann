@@ -1,6 +1,5 @@
 #include "network.h"
 
-
 void NetworkMessage::UDP_init_socket_receive(){
 	//Initialize receive socket address
 	sockaddr_in receiveAddress;
@@ -123,7 +122,7 @@ bool NetworkMessage::receive_message(){
 	if(!UDP_checksum()){
 		return 0;
 	}
-	if(receiveMsg.sendTime + TIMEOUT_TIME < time(NULL)){
+	if(receiveMsg.sendTime + MESSAGE_TIMEOUT_TIME < time(NULL)){
 		return 0;
 	}
 	return 1;
@@ -136,4 +135,20 @@ NetworkMessage::NetworkMessage(int receivePort, int sendPort, const char broadca
 	strcpy(this->broadcastIp, broadcastIp);
 	UDP_init_socket_receive();
 	UDP_init_socket_send();
+
+	// Magical code to get local IP adress
+	int fd;
+	struct ifreq ifr;
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	ifr.ifr_addr.sa_family = AF_INET;
+	strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
+	ioctl(fd, SIOCGIFADDR, &ifr);
+	close(fd);
+	//
+	unsigned long localIP = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr;
+	this->networkID = localIP>>8*3;
+
+	printf("Network ID: %i\n", this->networkID);
+
+
 }

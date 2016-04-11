@@ -4,11 +4,15 @@ using namespace std;
 
 enum State {stateStartup, stateMove, stateOpenDoors, stateWait};
 
+#define FLOOR_ARRIVAL_TIMEOUT 10
+
 //State machine leser fra requestMatrix, og kommuniserer tilbake gjennom finishRequest og (*latestFloor).
 void state_machine(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<int>* finishedRequest, atomic<int>* latestFloor){
     State currentState = stateStartup;
 	bool atFloor;
     MotorDirection moveDir = motorUp;
+
+    time_t time_since_floor = 0;
     
     while(1){
 		int floorReadout = elev_get_floor_sensor_signal();
@@ -38,17 +42,23 @@ void state_machine(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], ato
                 else if(!atFloor && request_on_floor(requestMatrix,*latestFloor)){
                     moveDir = MotorDirection(-moveDir);
                     currentState = stateMove;
+                    time_since_floor = time(NULL);
                 }
 				else if (request_in_dir(requestMatrix, moveDir, *latestFloor)) {
 					currentState = stateMove;
+                    time_since_floor = time(NULL);
 				}
 				else if (request_in_dir(requestMatrix,-moveDir, *latestFloor)) {
 					moveDir = MotorDirection(-moveDir) ;
 					currentState = stateMove;
+                    time_since_floor = time(NULL);
 				}
 			break;
 
-			case(stateMove) :
+			case(stateMove):
+                /*if(atFloor){
+                    time_since_floor = time(NULL);
+                }*/
 				elev_set_motor_direction(moveDir);
                 if(atFloor && check_stop(requestMatrix,*latestFloor, moveDir)){
                     currentState = stateOpenDoors;
@@ -56,6 +66,10 @@ void state_machine(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], ato
                 if(!request_in_dir(requestMatrix,moveDir,*latestFloor)){
 					elev_set_motor_direction(motorStop);
                     currentState = stateWait;
+                }
+                if(time_since_floor + FLOOR_ARRIVAL_TIMEOUT<time(NULL)){
+                    elev_set_motor_direction(motorStop);
+                    system("pkill executable");
                 }
             break;
 
@@ -82,7 +96,8 @@ int motor_dir_to_matrix_dir(int motorDir){
     }
     else{
         cout << "Tried to convert motor stop to button"<<endl;
-        return 0;
+        sleep(3);
+        exit(1);
     }
 }
 
@@ -119,14 +134,14 @@ bool request_on_floor(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], 
 
 bool request_in_dir(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int moveDir,int currentFloor){
     if(moveDir==motorUp){
-        for(int floor=currentFloor;floor<N_FLOORS;++floor){
+        for(int floor=currentFloor+1;floor<N_FLOORS;++floor){
             if(requestMatrix[floor][buttonOperator] || (requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] && (requestMatrix[floor][buttonUp] || requestMatrix[floor][buttonDown]) )){
                 return true;
             }
         }
     }
     else if(moveDir==motorDown){
-        for(int floor=currentFloor; floor>=0; --floor){
+        for(int floor=currentFloor-1; floor>=0; --floor){
             if(requestMatrix[floor][buttonOperator] || (requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] && (requestMatrix[floor][buttonUp] || requestMatrix[floor][buttonDown]) )){
                 return true;
             }

@@ -12,9 +12,12 @@
 #include <sys/fcntl.h>
 #include "main_include.h"
 
+#include <net/if.h>
+#include <sys/ioctl.h>
 
 
-const time_t TIMEOUT_TIME = DOOR_OPEN_TIME_S;
+
+const time_t MESSAGE_TIMEOUT_TIME = DOOR_OPEN_TIME_S;
 
 class NetworkMessage
 {
@@ -27,6 +30,8 @@ private:
 	int receivePort;
 	int sendPort;
 	char broadcastIp[16];
+
+	int networkID;
 
 	Message sendMsg;
 	Message receiveMsg;
@@ -47,5 +52,7 @@ public:
 
 	bool receive_message();
 	const Message* get_message(){ return &receiveMsg;}
+
+	int get_network_id(){return networkID;}
 };
 

@@ -7,6 +7,7 @@
 #include "main_include.h"
 #include "elevator_controll.h"
 #include <iostream>
+#include <time.h>
 
 
 void state_machine(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], std::atomic<int>* finishedRequest, std::atomic<int>* latestFloor);

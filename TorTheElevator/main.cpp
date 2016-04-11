@@ -1,10 +1,12 @@
 #include <thread>
 #include <atomic>
-#include <time.h>
 #include <comedi.h>
 #include <fstream>
 #include <iostream>
 #include <string>
+
+#include <sys/time.h>
+#include <iomanip>
 
 #include "main_include.h"
 #include "elevator_controll.h"
@@ -13,21 +15,28 @@
 #include "event_manager.h"
 
 
+
+
 using namespace std;
 
-#define TIMEOUT 3
+#define SLEEPTIME_uS 50*1000
+#define TIMEOUT 3*SLEEPTIME_uS
+//#define SPAWNSLEEP 10*SLEEPTIME_uS
+
 
 void init(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], fstream* fMaster){
     fMaster->seekg(0);
-    int t;
+    uint64_t t;
     char chr;
     (*fMaster) >> t;
     fMaster->get(chr);
+    cout << "Start: " << (int)chr << endl;
+    cout << "time: " << t << endl;
     elev_init();
     for(int floor=0;floor<N_FLOORS;++floor){
         for(int w=0;w<REQUEST_MATRIX_WIDTH;++w){
             if(fMaster->get(chr)){
-                cout << ":" << chr<< ":" <<endl;
+                cout << ":" << chr << ":";
                 requestMatrix[floor][w] = chr - '0';
             }
             else{
@@ -35,6 +44,7 @@ void init(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], fstream* fMaster){
             }
             
         }
+        cout << endl;
     }
 }
 
@@ -59,16 +69,21 @@ int main(){
     }
 
 
-    time_t t = 0;
+    timeval tv;
+    uint64_t t = 0;
+    uint64_t tNow = 0;
     while(!isMaster){
-        fSlave.seekg(0);
-        fSlave << time(NULL) << endl;
+    	gettimeofday(&tv,0);
+    	tNow = tv.tv_sec*1000000+tv.tv_usec;
 
-        sleep(1);
+        fSlave.seekg(0);
+        fSlave << tNow << endl;
+
+        usleep(SLEEPTIME_uS);
 
         fMaster.seekg(0);
         fMaster >> t;
-        if(t+TIMEOUT<time(NULL)){
+        if(t+TIMEOUT<tNow){
             system("gnome-terminal -x sh -c ./executable");
             isMaster = 1;
         }
@@ -78,6 +93,7 @@ int main(){
     init(requestMatrix, &fMaster);
     fMaster.close();
     fSlave.close();
+
 
     atomic<int> finishedFloor(-1);
     atomic<int> latestFloor;
@@ -89,28 +105,35 @@ int main(){
     fSlave.open("slavePing.txt", fstream::in);
     if(!fSlave.is_open() || !fMaster.is_open()){
         cout << "Failed to open" << endl;
-        sleep(1);
+        usleep(1);
         exit(1);
     }
 
+
     while(1){
+
+
+    	gettimeofday(&tv,0);
+		tNow = tv.tv_sec*1000000+tv.tv_usec;
+
         fMaster.seekg(0);
-        fMaster << time(NULL) << endl;
+        fMaster << tNow << endl;
+
+
         for(int floor=0;floor<N_FLOORS;++floor){
             for(int v=0;v<REQUEST_MATRIX_WIDTH;++v){
                 fMaster << requestMatrix[floor][v];
             }
         }
         fMaster << endl;
-        
-        sleep(1);
+        usleep(SLEEPTIME_uS);
 
         fSlave.seekg(0);
         fSlave >> t;
-        if(t+TIMEOUT<time(NULL)){
+        if(t+TIMEOUT<tNow){
             system("gnome-terminal -x sh -c ./executable");
         }
-        cout << "batman" << endl;
+        //cout << "batman" << endl;
     }
 
     return 0;

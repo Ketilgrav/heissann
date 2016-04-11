@@ -2,6 +2,12 @@
 #include <atomic>
 #include <iostream>
 #include <unistd.h>
+
+#include <sys/socket.h>
+#include <arpa/inet.h>	// htonl() etc.
+
+#include <sys/time.h>
+#include <iomanip>
 using namespace std;
 
 void add(atomic<int>* a){
@@ -30,10 +36,14 @@ enum ketil{
 	ok = 1
 };
 
+
 int main(){
 	ketil guy = ok;
 	guy= ketil(-guy);
-	cout << guy;	
+	cout << guy ;
+	//cout.precision(dbl::max_digits10);
+    
+    cout << htonl(localhost) <<endl;
 
 /*
 	int a[3][3];
