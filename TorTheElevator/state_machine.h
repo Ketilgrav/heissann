@@ -1,14 +1,11 @@
 #pragma once
-
-#include <thread>
-#include <mutex>
 #include <atomic>
 #include <unistd.h>
-#include "main_include.h"
-#include "elevator_controll.h"
 #include <iostream>
 #include <time.h>
 
+#include "main_include.h"
+#include "elevator_controll.h"
 
 void state_machine(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], std::atomic<int>* finishedRequest, std::atomic<int>* latestFloor);
 int motor_dir_to_matrix_dir(int motorDir);

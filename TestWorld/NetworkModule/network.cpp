@@ -51,11 +51,22 @@ void NetworkMessage::UDP_init_socket_send(){
 
 
 bool NetworkMessage::UDP_checksum(){
-	return ((receiveMsg.msgType+receiveMsg.floor+receiveMsg.button+receiveMsg.price+receiveMsg.sendTime+receiveMsg.checkSum)%255 == 0);
+	uint8_t sum = 0;
+	for(size_t i = 0; i<sizeof(receiveMsg);++i){
+		sum += ((uint8_t*)(receiveMsg.data))[i];
+	}
+	sum+=receiveMsg.checksum;
+	return sum;
+	//return ((receiveMsg.msgType+receiveMsg.floor+receiveMsg.button+receiveMsg.price+receiveMsg.sendTime+receiveMsg.checkSum)%255 == 0);
 }
 
 void NetworkMessage::UDP_make_checksum(){
-	sendMsg.checkSum = 255 - (sendMsg.msgType+sendMsg.floor+sendMsg.button+sendMsg.price+sendMsg.sendTime)%255;
+	//sendMsg.checkSum = 255 - (sendMsg.msgType+sendMsg.floor+sendMsg.button+sendMsg.price+sendMsg.sendTime)%255;
+	uint8_t sum = 0;
+	for(size_t i = 0; i<sizeof(sendMsg);++i){
+		sum += ((uint8_t*)(sendMsg.data))[i];
+	}
+	sendMsg.checksum = 255 - sum;
 }
 
 bool NetworkMessage::UDP_send(){
@@ -72,7 +83,7 @@ bool NetworkMessage::UDP_send(){
 	return 1;
 }
 
-void NetworkMessage::send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime){
+/*void NetworkMessage::send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime){
 	sendMsg.floor = floor;
 	sendMsg.msgType = msgType;
 	sendMsg.button = button;
@@ -80,15 +91,17 @@ void NetworkMessage::send_message(MessageType msgType, uint8_t floor, uint8_t bu
 	sendMsg.sendTime = sendTime;
 	UDP_make_checksum();
 	UDP_send();
-}
+}*/
 
-void NetworkMessage::send_message(const Message* msgOut){
-	sendMsg = *msgOut;
+void NetworkMessage::send_message(void* data){
+	sendMsg.data = data;
 	UDP_make_checksum();
+	sendMsg.sendTime = time(NULL);
 	UDP_send();
 }
 
 bool NetworkMessage::UDP_receive(){
+
 	//Legg til, beskjeden forkastes om checksum er false, eller tiden har gått ut
 
 	ssize_t recvBytes = recvfrom(receiveSocket, &receiveMsg, sizeof(receiveMsg), 0, nullptr, NULL);
@@ -115,7 +128,8 @@ bool NetworkMessage::UDP_receive(){
 	return 1;
 }
 
-bool NetworkMessage::receive_message(){
+bool NetworkMessage::receive_message(void* data){
+	receiveMsg.data = data;
 	if(!UDP_receive()){
 		return 0;
 	}
@@ -129,7 +143,7 @@ bool NetworkMessage::receive_message(){
 }
 
 
-NetworkMessage::NetworkMessage(int receivePort, int sendPort, const char broadcastIp[], time_t messageTimeoutTime){
+NetworkMessage::NetworkMessage(int receivePort, int sendPort, const char broadcastIp[],time_t messageTimeoutTime){
 	this->messageTimeoutTime = messageTimeoutTime;
 	this->receivePort = receivePort;
 	this->sendPort = sendPort;

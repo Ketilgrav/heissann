@@ -1,5 +1,4 @@
 #include "event_manager.h"
-#include "elevator_controll.h"
 
 using namespace std;
 
@@ -8,8 +7,8 @@ using namespace std;
 const char BROADCAST_IP[16] = "129.241.187.255";
 
 
-void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<int> *finishedFloor,  atomic<int> *latestFloor){
-    NetworkMessage network(RECEIVE_PORT,SEND_PORT, BROADCAST_IP);
+void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<int> *finishedFloor, const atomic<int> *latestFloor){
+    NetworkMessage network(RECEIVE_PORT,SEND_PORT, BROADCAST_IP,DOOR_OPEN_TIME_S+1);
     
 
     bool buttonPressMatrix[N_FLOORS][N_BUTTONS];
@@ -78,14 +77,14 @@ int calculate_cost(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int
     cost = cost < 0 ? -cost : cost;
 
 
-    /*for(int floor = 0; floor<N_FLOORS; ++floor){
+    for(int floor = 0; floor<N_FLOORS; ++floor){
         for(int button=0;button < N_BUTTONS; ++button){
             if(requestMatrix[floor][button]){
                 cost ++;
                 break;
             }
         }
-    }*/
+    }
 
     cost *= 256;
     cost += baseCost; //Om to heiser har lik kost, ekspeders oppgaven av den med høyest siste byte i IP-adressen

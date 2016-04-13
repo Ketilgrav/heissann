@@ -1,10 +1,7 @@
 #include "elevator_controll.h"
 
-#include "io.h"
-#include "channels.h"
-#include <assert.h>
-
 #define MOTOR_SPEED 2800
+#define NO_FLOOR -1
 
 static const int lamp_channel_matrix[N_FLOORS][N_BUTTONS] = {
     {LIGHT_UP1, LIGHT_DOWN1, LIGHT_COMMAND1},
@@ -88,6 +85,6 @@ int elev_get_floor_sensor_signal(void) {
     }
 }
 
-void elev_set_door_open_lamp(int value) {
+void elev_set_door_open_lamp(bool value) {
 	io_write_bit(LIGHT_DOOR_OPEN,value);
 }

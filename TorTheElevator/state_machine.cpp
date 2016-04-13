@@ -6,7 +6,6 @@ enum State {stateStartup, stateMove, stateOpenDoors, stateWait};
 
 #define FLOOR_ARRIVAL_TIMEOUT 10
 
-//State machine leser fra requestMatrix, og kommuniserer tilbake gjennom finishRequest og (*latestFloor).
 void state_machine(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<int>* finishedRequest, atomic<int>* latestFloor){
     State currentState = stateStartup;
 	bool atFloor;
@@ -56,18 +55,17 @@ void state_machine(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], ato
 			break;
 
 			case(stateMove):
-                /*if(atFloor){
-                    time_since_floor = time(NULL);
-                }*/
 				elev_set_motor_direction(moveDir);
                 if(atFloor && check_stop(requestMatrix,*latestFloor, moveDir)){
                     currentState = stateOpenDoors;
                 }
-                if(!request_in_dir(requestMatrix,moveDir,*latestFloor)){
+                if(atFloor && !request_in_dir(requestMatrix,moveDir,*latestFloor)){
 					elev_set_motor_direction(motorStop);
                     currentState = stateWait;
                 }
-                if(time_since_floor + FLOOR_ARRIVAL_TIMEOUT<time(NULL)){
+                /*If the elevator fails at arriving at a floor within a certain time
+                it will assume motor fail and shut down (call maintainance).*/
+                if(time_since_floor + FLOOR_ARRIVAL_TIMEOUT < time(NULL)){
                     elev_set_motor_direction(motorStop);
                     system("pkill executable");
                 }
@@ -103,17 +101,13 @@ int motor_dir_to_matrix_dir(int motorDir){
 
 bool check_stop(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int currentFloor,int moveDir){
 
-    //Om noen inne i heisen vil av
     if(requestMatrix[currentFloor][buttonOperator]){
         return true;
     }
-    //om det er vår oppgave å hente noen på denne etasjoen
     else if(requestMatrix[currentFloor][REQUEST_MATRIX_RESPONSIBILITY]){
-        //hvis vi uansett er på vei denne veien
         if(requestMatrix[currentFloor][motor_dir_to_matrix_dir(moveDir)]){
             return true;
         }
-        //om vi er ferdig med denne retningen, og kan ta med folk den andre veien
         else if(!request_in_dir(requestMatrix,moveDir, currentFloor) && requestMatrix[currentFloor][motor_dir_to_matrix_dir(-moveDir)]){
             return true;
         }
@@ -125,7 +119,6 @@ bool request_on_floor(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], 
     if(requestMatrix[currentFloor][buttonOperator]){
         return true;
     }
-    //om det er vår oppgave å hente noen på denne etasjoen
     else if(requestMatrix[currentFloor][REQUEST_MATRIX_RESPONSIBILITY]){
         return requestMatrix[currentFloor][buttonUp] || requestMatrix[currentFloor][buttonDown];
     }

@@ -10,34 +10,27 @@
 #include <mutex>
 #include <unistd.h>
 #include <sys/fcntl.h>
-
 #include <net/if.h>
 #include <sys/ioctl.h>
-
-
-#include "main_include.h"
-
-enum MessageType{
-	messageRequest = 0,
-	messageComplete = 1
-};
+#include <time.h>
 
 struct Message{
-	MessageType msgType;
-	uint8_t floor;
-	uint8_t button;
-	uint16_t price;
+	void* data;
+	uint8_t checksum;
 	time_t sendTime;
-	uint8_t checkSum;
+	Message(void* data){
+		this->data = data;
+	}
 };
 
-class NetworkMessage
-{
+class NetworkMessage{
 private:
 	sockaddr_in sendAddress;
 	//socklen_t receiveAddressLength;
 	int receiveSocket;
 	int sendSocket;
+
+	time_t messageTimeoutTime;
 
 	int receivePort;
 	int sendPort;
@@ -51,21 +44,19 @@ private:
 	void UDP_init_socket_receive();
 	void UDP_init_socket_send();
 
-	bool UDP_checksum();
-	void UDP_make_checksum();
-
 	bool UDP_send();
 	bool UDP_receive();
 
-	time_t messageTimeoutTime;
+	bool UDP_checksum();
+	void UDP_make_checksum();
 
 public:
 	NetworkMessage(int receivePort, int sendPort, const char broadcastIp[], time_t messageTimeoutTime);
-	void send_message(const Message* msgOut);
-	void send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime);
+	void send_message(void* data);
+	//void send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime);
 
-	bool receive_message();
-	const Message* get_message(){ return &receiveMsg;}
+	bool receive_message(void* data);
+	void* get_message(){return receiveMsg.data; }
 
 	int get_network_id(){return networkID;}
 };
