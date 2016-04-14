@@ -6,8 +6,15 @@ using namespace std;
 #define SEND_PORT 20013
 const char BROADCAST_IP[16] = "129.241.187.255";
 
+#define INTERNAL_REQUEST -1
+#define TIME_INF -1
+#define TIMEOUT_TIME 25
 
 void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<int> *finishedFloor, const atomic<int> *latestFloor){
+    
+    uint8_t sendData[4];
+    uint8_t receiveData[4];
+
     NetworkMessage network(RECEIVE_PORT,SEND_PORT, BROADCAST_IP,DOOR_OPEN_TIME_S+1);
     
 
@@ -15,54 +22,56 @@ void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<in
     time_t requestTimeoutMatrix[N_FLOORS];
     int calculatedCost[N_FLOORS];
 
-    //int tempCost;
-    while(1){
-        elev_get_button_signal(buttonPressMatrix);
 
-        //If a button that has not been requested is pressed, then do request
+    while(1){
+
+        /******
+        Button request
+        ******/
+        elev_get_button_signal(buttonPressMatrix);
         for(int floor = 0; floor<N_FLOORS; ++floor){
             for (int button = 0; button < N_BUTTONS; ++button) {
                 if(buttonPressMatrix[floor][button] && !requestMatrix[floor][button]){
-                    handle_request(requestMatrix, floor, button, -1, requestTimeoutMatrix, &network, *latestFloor,calculatedCost);
+                    handle_request(requestMatrix, floor, button, INTERNAL_REQUEST, requestTimeoutMatrix, &network, *latestFloor,calculatedCost);
                 }
             }
         }
         elev_set_button_lamp(requestMatrix);
 
-        //if we recieve a message
+        /******
+        Elevator compledet request
+        ******/
+        if((*finishedFloor) >= 0 && (*finishedFloor)<=N_FLOORS){
+            clear_request(requestMatrix,*finishedFloor,1,requestTimeoutMatrix,&network);
+            (*finishedFloor) = -1;
+        }
+
+        /******
+        Network request
+        ******/
         if(network.receive_message()){
             if(network.get_message()->msgType == messageRequest){
                 handle_request(requestMatrix, network.get_message()->floor, network.get_message()->button, network.get_message()->price, requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
             }
-            //We recieved a visited floor.
+
             else if(network.get_message()->msgType == messageComplete){
                 clear_request(requestMatrix,network.get_message()->floor,network.get_message()->button,requestTimeoutMatrix,&network);
             }
         }
 
 
-        //If a request has timed out, then re-request
+        /******
+        Timeout request
+        ******/
         for(int floor=0; floor<N_FLOORS; ++floor){
             if(requestTimeoutMatrix[floor] < time(NULL)){
-                //Arbitrarily gives priority on button up, will this be a problem?
                 if(requestMatrix[floor][buttonUp]){
-                    handle_request(requestMatrix, floor, buttonUp, -1, requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
+                    handle_request(requestMatrix, floor, buttonUp, INTERNAL_REQUEST, requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
                 }
                 else if(requestMatrix[floor][buttonDown]){
-                    handle_request(requestMatrix, floor, buttonDown, -1, requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
-                }
-                else{
-                    //Om vi timet ut på en operator button
-                    //nada
-                    continue;
+                    handle_request(requestMatrix, floor, buttonDown, INTERNAL_REQUEST, requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
                 }
             }
-        }
-
-        //If we have finished a floor
-        if((*finishedFloor) >= 0 && (*finishedFloor)<=N_FLOORS){
-            clear_request(requestMatrix,*finishedFloor,1,requestTimeoutMatrix,&network);
-            (*finishedFloor) = -1;
         }
 
     }
@@ -73,23 +82,21 @@ void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<in
 
 
 int calculate_cost(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor, int button, int latestFloor, int baseCost) {
-    int cost = floor - latestFloor;
-    cost = cost < 0 ? -cost : cost;
-
+    int cost = abs(floor - latestFloor);
 
     for(int floor = 0; floor<N_FLOORS; ++floor){
-        for(int button=0;button < N_BUTTONS; ++button){
-            if(requestMatrix[floor][button]){
-                cost ++;
-                break;
-            }
+        if(requestMatrix[floor][buttonOperator]){
+            cost++;
+        }
+        else if(requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] && (requestMatrix[floor][buttonUp] || requestMatrix[floor][buttonDown])){
+            cost++;
         }
     }
 
-    cost *= 256;
-    cost += baseCost; //Om to heiser har lik kost, ekspeders oppgaven av den med høyest siste byte i IP-adressen
+    cost *= 255;
+    //The elevator with the lowest IP adress will handle the request if they calculate the same cost
+    cost += baseCost; 
 
-    cout << cost;
     cout << cost << endl;
     return cost;
 }
@@ -97,18 +104,21 @@ int calculate_cost(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int
 void handle_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor, int button, unsigned int externalCost, time_t requestTimeoutMatrix[N_FLOORS], NetworkMessage* networkConnection, int latestFloor,int calculatedCost[N_FLOORS]){
     requestMatrix[floor][button] = 1;
     int cost;
-    if(requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY]){
+    //If we allready have that request, then we should not recalculate the cost, since it is probably 
+    //our own message that returned to us. 
+    if(requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] && requestMatrix[floor][button]){
         cost = calculatedCost[floor];
-
     }
     else{
         cost = calculate_cost(requestMatrix, floor, button, latestFloor, networkConnection->get_network_id());
         calculatedCost[floor] = cost;
     }
+
     if(button == buttonOperator){
         requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 1;
     }
     else{
+
         if(cost < externalCost){
             requestTimeoutMatrix[floor] = time(NULL) + TIMEOUT_TIME;
             networkConnection->send_message(messageRequest, floor, button, cost, time(NULL));
@@ -116,7 +126,7 @@ void handle_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floo
         }
         else if(requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY]==0  || cost > externalCost){
             requestTimeoutMatrix[floor] = time(NULL) + TIMEOUT_TIME;
-            requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 0;
+            requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY]==0
         }
     }
 }
@@ -134,4 +144,11 @@ void clear_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor
     }
     requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 0;
     requestTimeoutMatrix[floor] = TIME_INF;
+}
+
+void make_message(uint8_t* sendData, MessageType msgType, uint8_t floor, uint8_t button, uint8_t price){
+    sendData[0] = msgType;
+    sendData[1] = floor;
+    sendData[2] = button;
+    sendData[3] = price;
 }

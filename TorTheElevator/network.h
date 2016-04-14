@@ -16,17 +16,14 @@
 
 
 #include "main_include.h"
-
+#define BUFFER_SIZE 1024
 enum MessageType{
 	messageRequest = 0,
 	messageComplete = 1
 };
 
 struct Message{
-	MessageType msgType;
-	uint8_t floor;
-	uint8_t button;
-	uint16_t price;
+	uint8_t data[BUFFER_SIZE];
 	time_t sendTime;
 	uint8_t checkSum;
 };
@@ -61,11 +58,11 @@ private:
 
 public:
 	NetworkMessage(int receivePort, int sendPort, const char broadcastIp[], time_t messageTimeoutTime);
-	void send_message(const Message* msgOut);
-	void send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime);
+	void send_message(const uint8_t* data, int size);
+	//void send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime);
 
 	bool receive_message();
-	const Message* get_message(){ return &receiveMsg;}
+	const uint8_t* get_message(){ return &receiveMsg.data;}
 
 	int get_network_id(){return networkID;}
 };

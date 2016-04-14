@@ -51,15 +51,24 @@ void NetworkMessage::UDP_init_socket_send(){
 
 
 bool NetworkMessage::UDP_checksum(){
-	return ((receiveMsg.msgType+receiveMsg.floor+receiveMsg.button+receiveMsg.price+receiveMsg.sendTime+receiveMsg.checkSum)%255 == 0);
+	auto sum = receiveMsg.sendTime;
+	for(int i = 0; i < BUFFER_SIZE; ++i){
+		sum += receiveMsg.data[i];
+	}
+	return !(sum%255 - receiveMsg.checkSum);
 }
+
 
 void NetworkMessage::UDP_make_checksum(){
-	sendMsg.checkSum = 255 - (sendMsg.msgType+sendMsg.floor+sendMsg.button+sendMsg.price+sendMsg.sendTime)%255;
+	auto sum = sendMsg.sendTime;
+	for(int i = 0; i < BUFFER_SIZE; ++i){
+		sum += sendMsg.data[i];
+	}
+	sendMsg.checkSum = 255 - sum%255;
 }
 
+
 bool NetworkMessage::UDP_send(){
-	std::cout<< "haha"<<std::endl;
 	ssize_t sentBytes = sendto(sendSocket, &sendMsg, sizeof(sendMsg), 0, (struct sockaddr *)&sendAddress, sizeof(sendAddress));
 	if (sentBytes < 0){
 		perror("Sending failed");
@@ -72,6 +81,7 @@ bool NetworkMessage::UDP_send(){
 	return 1;
 }
 
+/*
 void NetworkMessage::send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime){
 	sendMsg.floor = floor;
 	sendMsg.msgType = msgType;
@@ -81,9 +91,18 @@ void NetworkMessage::send_message(MessageType msgType, uint8_t floor, uint8_t bu
 	UDP_make_checksum();
 	UDP_send();
 }
+*/
 
-void NetworkMessage::send_message(const Message* msgOut){
-	sendMsg = *msgOut;
+void NetworkMessage::send_message(const uint8_t* data, int size){
+	for (int i = 0; i < BUFFER_SIZE; ++i){
+		if(i < size){
+			sendMsg.data[i] = data[i];
+		}
+		else{
+			sendMsg.data[i] = 0;
+		}
+	}	
+	sendMsg.sendTime = time(NULL);
 	UDP_make_checksum();
 	UDP_send();
 }
