@@ -51,26 +51,24 @@ void NetworkMessage::UDP_init_socket_send(){
 
 
 bool NetworkMessage::UDP_checksum(){
-	uint8_t sum = 0;
-	for(size_t i = 0; i<sizeof(receiveMsg);++i){
-		sum += ((uint8_t*)(receiveMsg.data))[i];
+	auto sum = receiveMsg.sendTime;
+	for(int i = 0; i < BUFFER_SIZE; ++i){
+		sum += receiveMsg.data[i];
 	}
-	sum+=receiveMsg.checksum;
-	return sum;
-	//return ((receiveMsg.msgType+receiveMsg.floor+receiveMsg.button+receiveMsg.price+receiveMsg.sendTime+receiveMsg.checkSum)%255 == 0);
+	return sum%255 - receiveMsg.checkSum;
 }
+
 
 void NetworkMessage::UDP_make_checksum(){
-	//sendMsg.checkSum = 255 - (sendMsg.msgType+sendMsg.floor+sendMsg.button+sendMsg.price+sendMsg.sendTime)%255;
-	uint8_t sum = 0;
-	for(size_t i = 0; i<sizeof(sendMsg);++i){
-		sum += ((uint8_t*)(sendMsg.data))[i];
+	auto sum = sendMsg.sendTime;
+	for(int i = 0; i < BUFFER_SIZE; ++i){
+		sum += sendMsg.data[i];
 	}
-	sendMsg.checksum = 255 - sum;
+	sendMsg.checkSum = 255 - sum%255;
 }
 
+
 bool NetworkMessage::UDP_send(){
-	std::cout<< "haha"<<std::endl;
 	ssize_t sentBytes = sendto(sendSocket, &sendMsg, sizeof(sendMsg), 0, (struct sockaddr *)&sendAddress, sizeof(sendAddress));
 	if (sentBytes < 0){
 		perror("Sending failed");
@@ -83,7 +81,8 @@ bool NetworkMessage::UDP_send(){
 	return 1;
 }
 
-/*void NetworkMessage::send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime){
+/*
+void NetworkMessage::send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime){
 	sendMsg.floor = floor;
 	sendMsg.msgType = msgType;
 	sendMsg.button = button;
@@ -91,9 +90,10 @@ bool NetworkMessage::UDP_send(){
 	sendMsg.sendTime = sendTime;
 	UDP_make_checksum();
 	UDP_send();
-}*/
+}
+*/
 
-void NetworkMessage::send_message(void* data){
+void NetworkMessage::send_message(const uint8_t* data){
 	sendMsg.data = data;
 	UDP_make_checksum();
 	sendMsg.sendTime = time(NULL);
@@ -101,7 +101,6 @@ void NetworkMessage::send_message(void* data){
 }
 
 bool NetworkMessage::UDP_receive(){
-
 	//Legg til, beskjeden forkastes om checksum er false, eller tiden har gått ut
 
 	ssize_t recvBytes = recvfrom(receiveSocket, &receiveMsg, sizeof(receiveMsg), 0, nullptr, NULL);
@@ -128,8 +127,7 @@ bool NetworkMessage::UDP_receive(){
 	return 1;
 }
 
-bool NetworkMessage::receive_message(void* data){
-	receiveMsg.data = data;
+bool NetworkMessage::receive_message(){
 	if(!UDP_receive()){
 		return 0;
 	}
@@ -143,7 +141,7 @@ bool NetworkMessage::receive_message(void* data){
 }
 
 
-NetworkMessage::NetworkMessage(int receivePort, int sendPort, const char broadcastIp[],time_t messageTimeoutTime){
+NetworkMessage::NetworkMessage(int receivePort, int sendPort, const char broadcastIp[], time_t messageTimeoutTime){
 	this->messageTimeoutTime = messageTimeoutTime;
 	this->receivePort = receivePort;
 	this->sendPort = sendPort;

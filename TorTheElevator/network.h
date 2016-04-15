@@ -14,6 +14,8 @@
 #include <net/if.h>
 #include <sys/ioctl.h>
 
+#include <time.h>
+
 
 #include "main_include.h"
 #define BUFFER_SIZE 1024
@@ -22,14 +24,9 @@
 class NetworkDataOutline{
 private:
     time_t sendTime;
-    uint8_t checkSum;
 public:
 	void set_send_time() { sendTime =time(NULL);}
     time_t read_time() { return sendTime; }
-
-    void set_checksum(){checksum = calc_checksum();};
-    int8_t read_checksum(){ return checksum;}
-    bool calc_checksum() = deleted;
 };
 
 

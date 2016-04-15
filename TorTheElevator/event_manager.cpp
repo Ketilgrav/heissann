@@ -10,17 +10,9 @@ const char BROADCAST_IP[16] = "129.241.187.255";
 #define TIME_INF -1
 #define TIMEOUT_TIME 25
 
-#define NETWORK_MSG_TYPE 0
-#define NETWORK_FLOOR 1
-#define NETWORK_BUTTON 2
-#define NETWORK_COST 3
-#define NETWORK_MESSAGE_SIZE 4
-
-
 void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<int> *finishedFloor, const atomic<int> *latestFloor){
     
-    uint8_t sendData[4];
-    uint8_t receiveData[4];
+    NetworkData receiveMsg;
 
     NetworkMessage network(RECEIVE_PORT,SEND_PORT, BROADCAST_IP,DOOR_OPEN_TIME_S+1);
     
@@ -56,13 +48,13 @@ void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<in
         /******
         Network request
         ******/
-        if(network.receive_message()){
-            if(network.get_message()[NETWORK_MSG_TYPE] == messageRequest){
-                handle_request(requestMatrix, network.get_message()[NETWORK_FLOOR], network.get_message()[NETWORK_BUTTON], network.get_message()[NETWORK_COST], requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
+        if(network.receive_message(&receiveMsg)){
+            if(receiveMsg.msgType == messageRequest){
+                handle_request(requestMatrix, receiveMsg.floor, receiveMsg.button, receiveMsg.cost, requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
             }
 
-            else if(network.get_message()[NETWORK_MSG_TYPE] == messageComplete){
-                clear_request(requestMatrix,network.get_message()[NETWORK_FLOOR],network.get_message()[NETWORK_BUTTON],requestTimeoutMatrix,&network);
+            else if(receiveMsg.msgType == messageComplete){
+                clear_request(requestMatrix,receiveMsg.floor,false,requestTimeoutMatrix,&network);
             }
         }
 
@@ -128,8 +120,9 @@ void handle_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floo
 
         if(cost < externalCost){
             requestTimeoutMatrix[floor] = time(NULL) + TIMEOUT_TIME;
-            uint8_t data[NETWORK_MESSAGE_SIZE] = [messageRequest, floor, button, cost];
-            networkConnection->send_message(data, NETWORK_MESSAGE_SIZE);
+            NetworkData sendMsg(messageRequest,floor,button,cost);
+            networkConnection->send_message(&sendMsg);
+
             requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 1;
         }
         else if(requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY]==0  || cost > externalCost){
@@ -145,8 +138,8 @@ void clear_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor
             requestMatrix[floor][button] = 0;
         }
 
-        uint8_t data[NETWORK_MESSAGE_SIZE] = [messageComplete, floor, 0, 0];
-        networkConnection->send_message(data,NETWORK_MESSAGE_SIZE);
+        NetworkData sendMsg(messageComplete, floor, 0, 0);
+        networkConnection->send_message(sendMsg);
         
     }
     else{
@@ -155,11 +148,4 @@ void clear_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor
     }
     requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 0;
     requestTimeoutMatrix[floor] = TIME_INF;
-}
-
-void make_message(uint8_t* sendData, MessageType msgType, uint8_t floor, uint8_t button, uint8_t price){
-    sendData[0] = msgType;
-    sendData[1] = floor;
-    sendData[2] = button;
-    sendData[3] = price;
 }

@@ -22,7 +22,10 @@ public:
     uint8_t floor;
     uint8_t button;
     uint16_t cost;
-    bool calc_checksum(){
-    	return 255 - (msgType+floor+button+cost)%255;
+    NetworkData(MessageType msgType, uint8_t floor, uint8_t button, uint16_t cost){
+    	this->msgType = msgType;
+    	this->floor = floor;
+    	this->button = button;
+    	this->cost = cost;
     }
 };
