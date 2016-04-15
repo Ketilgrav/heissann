@@ -18,20 +18,11 @@
 #include "main_include.h"
 #define BUFFER_SIZE 1024
 
-
-class NetworkDataOutline{
-private:
-    time_t sendTime;
-    uint8_t checkSum;
-public:
-	void set_send_time() { sendTime =time(NULL);}
-    time_t read_time() { return sendTime; }
-
-    void set_checksum(){checksum = calc_checksum();};
-    int8_t read_checksum(){ return checksum;}
-    bool calc_checksum() = deleted;
+struct Message{
+	uint8_t data[BUFFER_SIZE];
+	time_t sendTime;
+	uint8_t checkSum;
 };
-
 
 class NetworkMessage
 {
@@ -47,8 +38,8 @@ private:
 
 	int networkID;
 
-	void* sendMsg;
-	void* receiveMsg;
+	Message sendMsg;
+	Message receiveMsg;
 
 	void UDP_init_socket_receive();
 	void UDP_init_socket_send();
@@ -63,11 +54,11 @@ private:
 
 public:
 	NetworkMessage(int receivePort, int sendPort, const char broadcastIp[], time_t messageTimeoutTime);
-	void send_message(const void* sendMsg);
+	void send_message(const uint8_t* data, int size);
 	//void send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime);
 
-	bool receive_message(void* receiveMsg);
-	//const uint8_t* get_message(){ return receiveMsg.data;}
+	bool receive_message();
+	const uint8_t* get_message(){ return receiveMsg.data;}
 
 	int get_network_id(){return networkID;}
 };

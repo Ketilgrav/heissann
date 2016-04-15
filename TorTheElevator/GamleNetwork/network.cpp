@@ -50,7 +50,7 @@ void NetworkMessage::UDP_init_socket_send(){
 }
 
 
-/*bool NetworkMessage::UDP_checksum(){
+bool NetworkMessage::UDP_checksum(){
 	auto sum = receiveMsg.sendTime;
 	for(int i = 0; i < BUFFER_SIZE; ++i){
 		sum += receiveMsg.data[i];
@@ -60,13 +60,13 @@ void NetworkMessage::UDP_init_socket_send(){
 
 
 void NetworkMessage::UDP_make_checksum(){
-	auto sum = sendMsg->sendTime;
+	auto sum = sendMsg.sendTime;
 	for(int i = 0; i < BUFFER_SIZE; ++i){
 		sum += sendMsg.data[i];
 	}
 	sendMsg.checkSum = 255 - sum%255;
 }
-*/
+
 
 bool NetworkMessage::UDP_send(){
 	ssize_t sentBytes = sendto(sendSocket, &sendMsg, sizeof(sendMsg), 0, (struct sockaddr *)&sendAddress, sizeof(sendAddress));
@@ -93,10 +93,17 @@ void NetworkMessage::send_message(MessageType msgType, uint8_t floor, uint8_t bu
 }
 */
 
-void NetworkMessage::send_message(const void* sendMsg){
-	this->sendMsg = sendMsg;
-	this->sendMsg->set_send_time();
-	this->sendMsg->set_checksum();
+void NetworkMessage::send_message(const uint8_t* data, int size){
+	for (int i = 0; i < BUFFER_SIZE; ++i){
+		if(i < size){
+			sendMsg.data[i] = data[i];
+		}
+		else{
+			sendMsg.data[i] = 0;
+		}
+	}	
+	sendMsg.sendTime = time(NULL);
+	UDP_make_checksum();
 	UDP_send();
 }
 
@@ -127,15 +134,14 @@ bool NetworkMessage::UDP_receive(){
 	return 1;
 }
 
-bool NetworkMessage::receive_message(void* receiveMsg){
-	this->receiveMsg = receiveMsg;
+bool NetworkMessage::receive_message(){
 	if(!UDP_receive()){
 		return 0;
 	}
-	if(!(this->receiveMsg->testChecksum()){
+	if(!UDP_checksum()){
 		return 0;
 	}
-	if(this->receiveMsg->read_time() + messageTimeoutTime < time(NULL)){
+	if(receiveMsg.sendTime + messageTimeoutTime < time(NULL)){
 		return 0;
 	}
 	return 1;
