@@ -51,20 +51,18 @@ void NetworkMessage::UDP_init_socket_send(){
 
 
 
-bool NetworkMessage::send_message(const void* sendMsg, size_t msg_size){
+void NetworkMessage::send_message(const void* sendMsg, size_t msg_size){
 	uint8_t data[sizeof(time_t)+msg_size];
-	data[0] = time(NULL);
-	std::memcpy(data+sizeof(time_t),sendMsg,msg_size);
+	time_t now  =time(NULL);
+	memcpy(data,&now, sizeof(time_t));
+	memcpy(data+sizeof(time_t),sendMsg,msg_size);
 	ssize_t sentBytes = sendto(sendSocket, &data, sizeof(data), 0, (struct sockaddr *)&sendAddress, sizeof(sendAddress));
 	if (sentBytes < 0){
-		perror("Sending failed");
-		return 0;
+		std::cout << "Sending failed." << std::endl;
 	}
-	if (sentBytes < sizeof(sendMsg)){
-		perror("Incomplete send");
-		return 0;
+	else if (sentBytes < sizeof(sendMsg)){
+		std::cout << "Incomplete send." << std::endl;
 	}
-	return 1;
 }
 
 
@@ -89,34 +87,25 @@ bool NetworkMessage::receive_message(void* receiveMsg, size_t msg_size){
 			exit(1);
 			return 0;
 		}
-
+	}
+	else{
+		std::cout << "VI fikk data" << std::endl;
 	}
 
 
 
-	time_t sendTime = *((time_t *)buffer);
-	std::memcpy(&sendTime,&buffer,sizeof(time_t));
+	time_t sendTime;
+	memcpy(&sendTime,buffer,sizeof(time_t));
 
 	if(sendTime + messageTimeoutTime < time(NULL)){
+		std::cout << "Sendtime" << sendTime << " Time:" << time(NULL) << std::endl;
 		return 0;
 	}
 
-	std::memcpy(receiveMsg,buffer+sizeof(time_t),msg_size);
+	memcpy(receiveMsg,buffer+sizeof(time_t),msg_size);
 
 	return 1;
 }
-
-bool NetworkMessage::receive_message(){
-	this->receiveMsg = receiveMsg;
-	if(!UDP_receive()){
-		return 0;
-	}
-	if(((NetworkDataOutline*)(this->sendMsg))->read_time() + messageTimeoutTime < time(NULL)){
-		return 0;
-	}
-	return 1;
-}
-
 
 NetworkMessage::NetworkMessage(int receivePort, int sendPort, const char broadcastIp[], time_t messageTimeoutTime){
 	this->messageTimeoutTime = messageTimeoutTime;

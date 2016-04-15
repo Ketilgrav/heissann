@@ -23,6 +23,8 @@ void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<in
 
 
     while(1){
+        elev_set_button_lamp(requestMatrix);
+
 
         /******
         Button request
@@ -35,13 +37,13 @@ void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<in
                 }
             }
         }
-        elev_set_button_lamp(requestMatrix);
 
         /******
-        Elevator compledet request
+        Elevator completed request
         ******/
         if((*finishedFloor) >= 0 && (*finishedFloor)<=N_FLOORS){
             clear_request(requestMatrix,*finishedFloor,1,requestTimeoutMatrix,&network);
+            cout << "We finished: " << (int)*finishedFloor << endl;
             (*finishedFloor) = -1;
         }
 
@@ -49,12 +51,15 @@ void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<in
         Network request
         ******/
         if(network.receive_message(&receiveMsg, sizeof(NetworkData))){
+            cout << (int)receiveMsg.msgType << endl;
             if(receiveMsg.msgType == messageRequest){
                 handle_request(requestMatrix, receiveMsg.floor, receiveMsg.button, receiveMsg.cost, requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
+                cout << "Network request on floor: " << (int)receiveMsg.floor << endl;
             }
 
             else if(receiveMsg.msgType == messageComplete){
                 clear_request(requestMatrix,receiveMsg.floor,false,requestTimeoutMatrix,&network);
+                cout << "Network finished floor: " << (int)receiveMsg.floor << endl;
             }
         }
 
@@ -72,7 +77,6 @@ void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<in
                 }
             }
         }
-
     }
 }
 
@@ -137,7 +141,7 @@ void clear_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor
         for(int button=0; button<N_BUTTONS; ++button){
             requestMatrix[floor][button] = 0;
         }
-
+        cout << "vi kom hit" << endl;
         NetworkData sendMsg(messageComplete, floor, 0, 0);
         networkConnection->send_message(&sendMsg,sizeof(sendMsg));
         

@@ -46,8 +46,6 @@ private:
 
 	int networkID;
 
-	void* receiveMsg;
-
 	void UDP_init_socket_receive();
 	void UDP_init_socket_send();
 

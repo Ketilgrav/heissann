@@ -86,7 +86,7 @@ int main(){
         fMaster >> t;
         if(t+TIMEOUT<tNow){
             cout << "Master timed out, all your base are belong to slave." << endl;
-            system("gnome-terminal -x sh -c ./executable");
+            //system("gnome-terminal -x sh -c ./executable");
             isMaster = 1;
         }
     }
@@ -127,15 +127,15 @@ int main(){
             }
         }
         fMaster << endl;
-
+        
         usleep(SLEEPTIME_uS);
 
-        fSlave.seekg(0);
+        /*fSlave.seekg(0);
         fSlave >> t;
         if(t+TIMEOUT<tNow){
             cout << "Slave timed out, making new." << endl;
             system("gnome-terminal -x sh -c ./executable");
-        }
+        }*/
     }
 
     return 0;
