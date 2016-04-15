@@ -51,9 +51,13 @@ void NetworkMessage::UDP_init_socket_send(){
 
 
 
-bool NetworkMessage::UDP_send(){
-	uint8_t data[sizeof(size_t)+size+sizeof(time_t)]
-	ssize_t sentBytes = sendto(sendSocket, &sendMsg, sizeof(sendMsg), 0, (struct sockaddr *)&sendAddress, sizeof(sendAddress));
+bool NetworkMessage::send_message(const void* sendMsg, size_t msg_size){
+	uint8_t data[sizeof(time_t)+msg_size];
+	data[0] = time(NULL);
+	for(size i=0;i<msg_size;++i){
+		*(data+sizeof(time_t)+i) = *(sendMsg+i)
+	}
+	ssize_t sentBytes = sendto(sendSocket, &data, sizeof(data), 0, (struct sockaddr *)&sendAddress, sizeof(sendAddress));
 	if (sentBytes < 0){
 		perror("Sending failed");
 		return 0;
@@ -66,23 +70,16 @@ bool NetworkMessage::UDP_send(){
 }
 
 
-void NetworkMessage::send_message(const void* sendMsg){
-	this->sendMsg = sendMsg;
-	((NetworkDataOutline*)(this->sendMsg))->set_send_time();
-	UDP_send();
-}
-
-bool NetworkMessage::UDP_receive(){
-	//Legg til, beskjeden forkastes om checksum er false, eller tiden har gått ut
-
-	ssize_t recvBytes = recvfrom(receiveSocket, &receiveMsg, sizeof(receiveMsg), 0, nullptr, NULL);
+bool NetworkMessage::receive_message(void* receiveMsg, size_t msg_size){
+	uint8_t buffer[sizeof(time_t)+msg_size];
+	ssize_t recvBytes = recvfrom(receiveSocket, &buffer, sizeof(buffer), 0, nullptr, NULL);
 	if(recvBytes == 0){
 		perror("Receive connection closed remotely");
 		sleep(2);
 		exit(1);
 		return 0;
 	}
-		//Error from socket
+	//Error from socket
 	else if (recvBytes == -1) {
 		//No data on socket
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
@@ -97,16 +94,27 @@ bool NetworkMessage::UDP_receive(){
 
 	}
 
-	NetworkDataOutline msgData;
-	msgData->data = receiveMsg+sizeof(size_t);
-	msgData->size = data[0];
-	msgData->
 
-	NetworkData msg = msgData+sizeof(size_t);
+
+	time_t sendTime;
+	for(size i=0; i<sizeof(time_t);++i){
+		*(&sendTime + i) = buffer[i];
+	}
+
+	if(sendTime + messageTimeoutTime < time(NULL)){
+		return 0;
+	}
+
+	for(size i=0; i<msg_size;++i){
+		*(receiveMsg + i) = buffer[sizeof(time_t)+i];
+	}
+
+
+
 	return 1;
 }
 
-bool NetworkMessage::receive_message(void* receiveMsg){
+bool NetworkMessage::receive_message(){
 	this->receiveMsg = receiveMsg;
 	if(!UDP_receive()){
 		return 0;

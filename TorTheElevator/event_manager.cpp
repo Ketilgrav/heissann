@@ -48,7 +48,7 @@ void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<in
         /******
         Network request
         ******/
-        if(network.receive_message(&receiveMsg)){
+        if(network.receive_message(&receiveMsg, sizeof(NetworkData))){
             if(receiveMsg.msgType == messageRequest){
                 handle_request(requestMatrix, receiveMsg.floor, receiveMsg.button, receiveMsg.cost, requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
             }
@@ -121,7 +121,7 @@ void handle_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floo
         if(cost < externalCost){
             requestTimeoutMatrix[floor] = time(NULL) + TIMEOUT_TIME;
             NetworkData sendMsg(messageRequest,floor,button,cost);
-            networkConnection->send_message(&sendMsg);
+            networkConnection->send_message(&sendMsg,sizeof(sendMsg));
 
             requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 1;
         }
@@ -139,7 +139,7 @@ void clear_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor
         }
 
         NetworkData sendMsg(messageComplete, floor, 0, 0);
-        networkConnection->send_message(&sendMsg);
+        networkConnection->send_message(&sendMsg,sizeof(sendMsg));
         
     }
     else{

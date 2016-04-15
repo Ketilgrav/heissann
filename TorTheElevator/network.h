@@ -21,7 +21,7 @@
 #define BUFFER_SIZE 1024
 
 
-class NetworkDataOutline{
+/*class NetworkDataOutline{
 private:
 	void* data;
 	size_t size;
@@ -29,14 +29,14 @@ private:
 public:
 	void set_send_time() { sendTime =time(NULL);}
     time_t read_time() { return sendTime; }
-};
+};*/
 
 
 class NetworkMessage
 {
 private:
 	sockaddr_in sendAddress;
-	//socklen_t receiveAddressLength;
+	
 	int receiveSocket;
 	int sendSocket;
 
@@ -46,27 +46,18 @@ private:
 
 	int networkID;
 
-	const void* sendMsg;
 	void* receiveMsg;
 
 	void UDP_init_socket_receive();
 	void UDP_init_socket_send();
 
-	bool UDP_checksum();
-	void UDP_make_checksum();
-
-	bool UDP_send();
-	bool UDP_receive();
-
 	time_t messageTimeoutTime;
 
 public:
 	NetworkMessage(int receivePort, int sendPort, const char broadcastIp[], time_t messageTimeoutTime);
-	void send_message(const void* sendMsg);
-	//void send_message(MessageType msgType, uint8_t floor, uint8_t button, uint16_t price, time_t sendTime);
+	void send_message(const void* sendMsg, size_t msg_size);
 
-	bool receive_message(void* receiveMsg);
-	//const uint8_t* get_message(){ return receiveMsg.data;}
+	bool receive_message(void* receiveMsg, size_t msg_size);
 
 	int get_network_id(){return networkID;}
 };
