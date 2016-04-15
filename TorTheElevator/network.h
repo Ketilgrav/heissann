@@ -23,6 +23,8 @@
 
 class NetworkDataOutline{
 private:
+	void* data;
+	size_t size;
     time_t sendTime;
 public:
 	void set_send_time() { sendTime =time(NULL);}
@@ -44,7 +46,7 @@ private:
 
 	int networkID;
 
-	void* sendMsg;
+	const void* sendMsg;
 	void* receiveMsg;
 
 	void UDP_init_socket_receive();

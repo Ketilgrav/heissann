@@ -52,6 +52,7 @@ void NetworkMessage::UDP_init_socket_send(){
 
 
 bool NetworkMessage::UDP_send(){
+	uint8_t data[sizeof(size_t)+size+sizeof(time_t)]
 	ssize_t sentBytes = sendto(sendSocket, &sendMsg, sizeof(sendMsg), 0, (struct sockaddr *)&sendAddress, sizeof(sendAddress));
 	if (sentBytes < 0){
 		perror("Sending failed");
@@ -67,7 +68,7 @@ bool NetworkMessage::UDP_send(){
 
 void NetworkMessage::send_message(const void* sendMsg){
 	this->sendMsg = sendMsg;
-	this->sendMsg->set_send_time();
+	((NetworkDataOutline*)(this->sendMsg))->set_send_time();
 	UDP_send();
 }
 
@@ -95,6 +96,13 @@ bool NetworkMessage::UDP_receive(){
 		}
 
 	}
+
+	NetworkDataOutline msgData;
+	msgData->data = receiveMsg+sizeof(size_t);
+	msgData->size = data[0];
+	msgData->
+
+	NetworkData msg = msgData+sizeof(size_t);
 	return 1;
 }
 
@@ -103,7 +111,7 @@ bool NetworkMessage::receive_message(void* receiveMsg){
 	if(!UDP_receive()){
 		return 0;
 	}
-	if(this->receiveMsg->read_time() + messageTimeoutTime < time(NULL)){
+	if(((NetworkDataOutline*)(this->sendMsg))->read_time() + messageTimeoutTime < time(NULL)){
 		return 0;
 	}
 	return 1;

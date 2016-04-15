@@ -16,7 +16,7 @@ enum MessageType{
     messageComplete = 1
 };
 
-class NetworkData: public NetworkDataOutline{
+class NetworkData{
 public:
     MessageType msgType;
     uint8_t floor;
@@ -27,5 +27,11 @@ public:
     	this->floor = floor;
     	this->button = button;
     	this->cost = cost;
+    }
+    NetworkData(){
+        msgType = messageRequest;
+        floor = 0;
+        button = 0;
+        cost = 0;
     }
 };

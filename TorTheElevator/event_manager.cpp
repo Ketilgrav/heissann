@@ -127,7 +127,7 @@ void handle_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floo
         }
         else if(requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY]==0  || cost > externalCost){
             requestTimeoutMatrix[floor] = time(NULL) + TIMEOUT_TIME;
-            requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY]=0
+            requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY]=0;
         }
     }
 }
@@ -139,7 +139,7 @@ void clear_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor
         }
 
         NetworkData sendMsg(messageComplete, floor, 0, 0);
-        networkConnection->send_message(sendMsg);
+        networkConnection->send_message(&sendMsg);
         
     }
     else{

@@ -5,6 +5,7 @@ using namespace std;
 enum State {stateStartup, stateMove, stateOpenDoors, stateWait};
 
 #define FLOOR_ARRIVAL_TIMEOUT 10
+#define NO_FLOOR -1
 
 void state_machine(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<int>* finishedRequest, atomic<int>* latestFloor){
     State currentState = stateStartup;
