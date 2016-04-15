@@ -51,15 +51,13 @@ void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<in
         Network request
         ******/
         if(network.receive_message(&receiveMsg, sizeof(NetworkData))){
-            cout << (int)receiveMsg.msgType << endl;
-            if(receiveMsg.msgType == messageRequest){
+            if(receiveMsg.senderIp != network.get_network_id()){
+                if(receiveMsg.msgType == messageRequest){
                 handle_request(requestMatrix, receiveMsg.floor, receiveMsg.button, receiveMsg.cost, requestTimeoutMatrix,&network,*latestFloor,calculatedCost);
-                cout << "Network request on floor: " << (int)receiveMsg.floor << endl;
             }
 
             else if(receiveMsg.msgType == messageComplete){
                 clear_request(requestMatrix,receiveMsg.floor,false,requestTimeoutMatrix,&network);
-                cout << "Network finished floor: " << (int)receiveMsg.floor << endl;
             }
         }
 
@@ -124,7 +122,7 @@ void handle_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floo
 
         if(cost < externalCost){
             requestTimeoutMatrix[floor] = time(NULL) + TIMEOUT_TIME;
-            NetworkData sendMsg(messageRequest,floor,button,cost);
+            NetworkData sendMsg(messageRequest,floor,button,cost, networkConnection.get_network_id());
             networkConnection->send_message(&sendMsg,sizeof(sendMsg));
 
             requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 1;
@@ -142,7 +140,7 @@ void clear_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor
             requestMatrix[floor][button] = 0;
         }
         cout << "vi kom hit" << endl;
-        NetworkData sendMsg(messageComplete, floor, 0, 0);
+        NetworkData sendMsg(messageComplete, floor, 0, 0, networkConnection.get_network_id());
         networkConnection->send_message(&sendMsg,sizeof(sendMsg));
         
     }

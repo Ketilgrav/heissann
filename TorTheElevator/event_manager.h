@@ -11,10 +11,6 @@ int calculate_cost(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int
 void handle_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor, int button, unsigned int externalCost, time_t requestTimeoutMatrix[N_FLOORS], NetworkMessage* networkConnection, int latestFloor,int calculatedCost[N_FLOORS]);
 void clear_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor, bool handledByThisElevator, time_t requestTimeoutMatrix[N_FLOORS], NetworkMessage* networkConnection);
 
-/*enum MessageType{
-    messageRequest = 0,
-    messageComplete = 1
-};*/
 #define messageComplete 0
 #define messageRequest 1
 
@@ -24,16 +20,19 @@ public:
     uint8_t floor;
     uint8_t button;
     uint16_t cost;
-    NetworkData(uint8_t msgType, uint8_t floor, uint8_t button, uint16_t cost){
+    uint8_t senderIp;
+    NetworkData(uint8_t msgType, uint8_t floor, uint8_t button, uint16_t cost, uint8_t senderIp){
     	this->msgType = msgType;
     	this->floor = floor;
     	this->button = button;
     	this->cost = cost;
+        this->senderIp = senderIp;
     }
     NetworkData(){
         msgType = messageRequest;
         floor = 0;
         button = 0;
         cost = 0;
+        senderIp = 0;
     }
 };
