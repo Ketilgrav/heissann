@@ -54,9 +54,7 @@ void NetworkMessage::UDP_init_socket_send(){
 bool NetworkMessage::send_message(const void* sendMsg, size_t msg_size){
 	uint8_t data[sizeof(time_t)+msg_size];
 	data[0] = time(NULL);
-	for(size i=0;i<msg_size;++i){
-		*(data+sizeof(time_t)+i) = *(sendMsg+i)
-	}
+	std::memcpy(data+sizeof(time_t),sendMsg,msg_size);
 	ssize_t sentBytes = sendto(sendSocket, &data, sizeof(data), 0, (struct sockaddr *)&sendAddress, sizeof(sendAddress));
 	if (sentBytes < 0){
 		perror("Sending failed");
@@ -96,20 +94,14 @@ bool NetworkMessage::receive_message(void* receiveMsg, size_t msg_size){
 
 
 
-	time_t sendTime;
-	for(size i=0; i<sizeof(time_t);++i){
-		*(&sendTime + i) = buffer[i];
-	}
+	time_t sendTime = *((time_t *)buffer);
+	std::memcpy(&sendTime,&buffer,sizeof(time_t));
 
 	if(sendTime + messageTimeoutTime < time(NULL)){
 		return 0;
 	}
 
-	for(size i=0; i<msg_size;++i){
-		*(receiveMsg + i) = buffer[sizeof(time_t)+i];
-	}
-
-
+	std::memcpy(receiveMsg,buffer+sizeof(time_t),msg_size);
 
 	return 1;
 }
