@@ -130,12 +130,12 @@ int main(){
         
         usleep(SLEEPTIME_uS);
 
-        /*fSlave.seekg(0);
+        fSlave.seekg(0);
         fSlave >> t;
         if(t+TIMEOUT<tNow){
             cout << "Slave timed out, making new." << endl;
             system("gnome-terminal -x sh -c ./executable");
-        }*/
+        }
     }
 
     return 0;

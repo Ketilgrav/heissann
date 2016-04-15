@@ -89,7 +89,6 @@ bool NetworkMessage::receive_message(void* receiveMsg, size_t msg_size){
 		}
 	}
 	else{
-		std::cout << "VI fikk data" << std::endl;
 	}
 
 
@@ -98,7 +97,7 @@ bool NetworkMessage::receive_message(void* receiveMsg, size_t msg_size){
 	memcpy(&sendTime,buffer,sizeof(time_t));
 
 	if(sendTime + messageTimeoutTime < time(NULL)){
-		std::cout << "Sendtime" << sendTime << " Time:" << time(NULL) << std::endl;
+		std::cout << "Message timed out due to sendtime(" << sendTime << ") + messageTimeoutTime(" << messageTimeoutTime << ") < time now(" << time(NULL) << ")" <<std::endl;
 		return 0;
 	}
 

@@ -42,7 +42,6 @@ void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<in
         ******/
         if((*finishedFloor) >= 0 && (*finishedFloor)<=N_FLOORS){
             clear_request(requestMatrix,*finishedFloor,1,requestTimeoutMatrix,&network);
-            cout << "We finished: " << (int)*finishedFloor << endl;
             (*finishedFloor) = -1;
         }
 
@@ -52,11 +51,12 @@ void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<in
         if(network.receive_message(&receiveMsg, sizeof(NetworkData))){
             if(receiveMsg.senderIp != network.get_network_id()){
                 if(receiveMsg.msgType == messageRequest){
-                handle_request(requestMatrix, receiveMsg.floor, receiveMsg.button, receiveMsg.cost, requestTimeoutMatrix,&network,*latestFloor);
-            }
+            	    handle_request(requestMatrix, receiveMsg.floor, receiveMsg.button, receiveMsg.cost, requestTimeoutMatrix,&network,*latestFloor);
+            	}
 
-            else if(receiveMsg.msgType == messageComplete){
-                clear_request(requestMatrix,receiveMsg.floor,false,requestTimeoutMatrix,&network);
+            	else if(receiveMsg.msgType == messageComplete){
+	                clear_request(requestMatrix,receiveMsg.floor,false,requestTimeoutMatrix,&network);
+            	}
             }
         }
 
@@ -78,7 +78,7 @@ void event_manager(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], atomic<in
 }
 
 
-int calculate_cost(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor, int button, int latestFloor, int baseCost) {
+int calculate_cost(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor, int button, int latestFloor, int baseCost){
     int cost = abs(floor - latestFloor);
 
     for(int floor = 0; floor<N_FLOORS; ++floor){
@@ -93,8 +93,6 @@ int calculate_cost(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int
     cost *= 255;
     //The elevator with the lowest IP adress will handle the request if they calculate the same cost
     cost += baseCost; 
-
-    cout << cost << endl;
     return cost;
 }
 
@@ -104,7 +102,7 @@ void handle_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floo
     if(button != buttonOperator){
         requestTimeoutMatrix[floor] = time(NULL) + TIMEOUT_TIME;
         if(cost < externalCost){
-            NetworkData sendMsg(messageRequest,floor,button,cost, networkConnection.get_network_id());
+            NetworkData sendMsg(messageRequest,floor,button,cost, networkConnection->get_network_id());
             networkConnection->send_message(&sendMsg,sizeof(sendMsg));
 
             requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 1;
@@ -120,7 +118,7 @@ void clear_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floor
         for(int button=0; button<N_BUTTONS; ++button){
             requestMatrix[floor][button] = 0;
         }
-        NetworkData sendMsg(messageComplete, floor, 0, 0, networkConnection.get_network_id());
+        NetworkData sendMsg(messageComplete, floor, 0, 0, networkConnection->get_network_id());
         networkConnection->send_message(&sendMsg,sizeof(sendMsg));
         
     }
