@@ -12,10 +12,12 @@ void state_machine(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], ato
 	bool atFloor;
     MotorDirection moveDir = motorUp;
 
-    time_t time_since_floor = 0;
+    time_t timeSinceLastFloor = 0;
     
+    int floorReadout;
+
     while(1){
-		int floorReadout = elev_get_floor_sensor_signal();
+		floorReadout = elev_get_floor_sensor_signal();
 		if (floorReadout != NO_FLOOR) {
             (*latestFloor) = floorReadout;
 			atFloor = 1;
@@ -42,22 +44,23 @@ void state_machine(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], ato
                 else if(!atFloor && request_on_floor(requestMatrix,*latestFloor)){
                     moveDir = MotorDirection(-moveDir);
                     currentState = stateMove;
-                    time_since_floor = time(NULL);
+                    timeSinceLastFloor = time(NULL);
                 }
 				else if (request_in_dir(requestMatrix, moveDir, *latestFloor)) {
 					currentState = stateMove;
-                    time_since_floor = time(NULL);
+                    timeSinceLastFloor = time(NULL);
 				}
 				else if (request_in_dir(requestMatrix,-moveDir, *latestFloor)) {
 					moveDir = MotorDirection(-moveDir) ;
 					currentState = stateMove;
-                    time_since_floor = time(NULL);
+                    timeSinceLastFloor = time(NULL);
 				}
 			break;
 
 			case(stateMove):
 				elev_set_motor_direction(moveDir);
                 if(atFloor && check_stop(requestMatrix,*latestFloor, moveDir)){
+                    elev_set_motor_direction(motorStop);
                     currentState = stateOpenDoors;
                 }
                 if(atFloor && !request_in_dir(requestMatrix,moveDir,*latestFloor)){
@@ -66,17 +69,14 @@ void state_machine(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], ato
                 }
                 /*If the elevator fails at arriving at a floor within a certain time
                 it will assume motor fail and shut down (call maintainance).*/
-                if(time_since_floor + FLOOR_ARRIVAL_TIMEOUT < time(NULL)){
+                if(timeSinceLastFloor + FLOOR_ARRIVAL_TIMEOUT < time(NULL)){
                     elev_set_motor_direction(motorStop);
                     system("pkill executable");
                 }
             break;
 
             case(stateOpenDoors):
-				elev_set_motor_direction(motorStop);
                 finishedRequest->store(*latestFloor);
-
-                //Door cycle
 				elev_set_door_open_lamp(1);
                 sleep(DOOR_OPEN_TIME_S);
 				elev_set_door_open_lamp(0);
@@ -101,7 +101,6 @@ int motor_dir_to_matrix_dir(int motorDir){
 }
 
 bool check_stop(const bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int currentFloor,int moveDir){
-
     if(requestMatrix[currentFloor][buttonOperator]){
         return true;
     }

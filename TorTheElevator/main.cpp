@@ -22,9 +22,10 @@ void init(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], fstream* fMaster){
     uint64_t t;
     char chr;
     (*fMaster) >> t;
-    fMaster->get(chr);  //Fjerner '\n' etter første linje.
+    fMaster->get(chr);  //Removes newline '\n' after first line.
     cout << "Reading time: " << endl;
-    cout << "time: " << t << endl;
+    cout << "Time: " << t << endl;
+    cout << "Floor readout: " << endl
     elev_init();
     for(int floor=0;floor<N_FLOORS;++floor){
         for(int w=0;w<REQUEST_MATRIX_WIDTH;++w){
@@ -42,6 +43,7 @@ void init(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], fstream* fMaster){
     cout << "Initialization completed." << endl;
 }
 
+
 int main(){
     bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH];
 
@@ -50,7 +52,6 @@ int main(){
     *****/
 
     fstream fMaster;
-
     /*Opens the process pair communication files for reading.
     If the files does not exist then it has to be made.*/
     fMaster.open("requestMatrix.txt", fstream::in);
@@ -62,13 +63,14 @@ int main(){
     }
     fstream fSlave("slavePing.txt",fstream::out);
 
-    bool isMaster = 0;
     if(!fSlave.is_open() || !fMaster.is_open()){
         cout << "Failed to open files." << endl;
         sleep(1);
         exit(1);
     }
 
+
+    bool isMaster = 0;
 
     timeval tv;
     uint64_t t = 0;
@@ -86,7 +88,7 @@ int main(){
         fMaster >> t;
         if(t+TIMEOUT<tNow){
             cout << "Master timed out, all your base are belong to slave." << endl;
-            //system("gnome-terminal -x sh -c ./executable");
+            system("gnome-terminal -x sh -c ./executable");
             isMaster = 1;
         }
     }
@@ -139,8 +141,5 @@ int main(){
     }
 
     return 0;
-
-
-
 }
 

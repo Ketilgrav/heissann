@@ -1,6 +1,30 @@
 #include "network.h"
 
-void NetworkMessage::UDP_init_socket_receive(){
+NetworkConnection::NetworkConnection(int receivePort, int sendPort, const char broadcastIp[], time_t messageTimeoutTime){
+	this->receivePort = receivePort;
+	this->sendPort = sendPort;
+	strcpy(this->broadcastIp, broadcastIp);
+	this->messageTimeoutTime = messageTimeoutTime;
+	UDP_init_socket_receive();
+	UDP_init_socket_send();
+
+	// Code to get local IP adress, designed by: http://www.geekpage.jp/en/programming/linux-network/get-ipaddr.php
+	int fd;
+	struct ifreq ifr;
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	ifr.ifr_addr.sa_family = AF_INET;
+	strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
+	ioctl(fd, SIOCGIFADDR, &ifr);
+	close(fd);
+	unsigned long localIP = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr;
+
+	this->networkID = localIP>>8*3;
+	printf("Network ID: %i\n", this->networkID);
+}
+
+
+
+void NetworkConnection::UDP_init_socket_receive(){
 	//Initialize receive socket address
 	sockaddr_in receiveAddress;
 	receiveAddress.sin_family = AF_INET;
@@ -9,7 +33,7 @@ void NetworkMessage::UDP_init_socket_receive(){
 	socklen_t receiveAddressLength = sizeof(receiveAddress);
 
 	//Initialize and bind listen socket
-	if ( (receiveSocket = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+	if ((receiveSocket = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
 		perror("Failed to create receiveSocket\n");
 		sleep(2);
 		exit(1);
@@ -24,7 +48,7 @@ void NetworkMessage::UDP_init_socket_receive(){
 	}
 }
 
-void NetworkMessage::UDP_init_socket_send(){
+void NetworkConnection::UDP_init_socket_send(){
 	sendAddress.sin_family = AF_INET;
 	sendAddress.sin_port = htons(sendPort);
 	inet_aton(broadcastIp, &sendAddress.sin_addr);
@@ -51,11 +75,12 @@ void NetworkMessage::UDP_init_socket_send(){
 
 
 
-void NetworkMessage::send_message(const void* sendMsg, size_t msg_size){
+void NetworkConnection::send_message(const void* sendMsg, size_t msg_size){
 	uint8_t data[sizeof(time_t)+msg_size];
 	time_t now  =time(NULL);
 	memcpy(data,&now, sizeof(time_t));
 	memcpy(data+sizeof(time_t),sendMsg,msg_size);
+
 	ssize_t sentBytes = sendto(sendSocket, &data, sizeof(data), 0, (struct sockaddr *)&sendAddress, sizeof(sendAddress));
 	if (sentBytes < 0){
 		std::cout << "Sending failed." << std::endl;
@@ -66,8 +91,9 @@ void NetworkMessage::send_message(const void* sendMsg, size_t msg_size){
 }
 
 
-bool NetworkMessage::receive_message(void* receiveMsg, size_t msg_size){
+bool NetworkConnection::receive_message(void* receiveMsg, size_t msg_size){
 	uint8_t buffer[sizeof(time_t)+msg_size];
+
 	ssize_t recvBytes = recvfrom(receiveSocket, &buffer, sizeof(buffer), 0, nullptr, NULL);
 	if(recvBytes == 0){
 		perror("Receive connection closed remotely");
@@ -88,8 +114,6 @@ bool NetworkMessage::receive_message(void* receiveMsg, size_t msg_size){
 			return 0;
 		}
 	}
-	else{
-	}
 
 
 
@@ -102,31 +126,5 @@ bool NetworkMessage::receive_message(void* receiveMsg, size_t msg_size){
 	}
 
 	memcpy(receiveMsg,buffer+sizeof(time_t),msg_size);
-
 	return 1;
-}
-
-NetworkMessage::NetworkMessage(int receivePort, int sendPort, const char broadcastIp[], time_t messageTimeoutTime){
-	this->messageTimeoutTime = messageTimeoutTime;
-	this->receivePort = receivePort;
-	this->sendPort = sendPort;
-	strcpy(this->broadcastIp, broadcastIp);
-	UDP_init_socket_receive();
-	UDP_init_socket_send();
-
-	// Magical code to get local IP adress
-	int fd;
-	struct ifreq ifr;
-	fd = socket(AF_INET, SOCK_DGRAM, 0);
-	ifr.ifr_addr.sa_family = AF_INET;
-	strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
-	ioctl(fd, SIOCGIFADDR, &ifr);
-	close(fd);
-	//
-	unsigned long localIP = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr;
-	this->networkID = localIP>>8*3;
-
-	printf("Network ID: %i\n", this->networkID);
-
-
 }

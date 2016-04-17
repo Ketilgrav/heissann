@@ -5,9 +5,7 @@
 #include <stdio.h>		// printf()
 #include <string.h>		// Strlen()
 #include <errno.h>		// Error handling
-#include <iostream>		// Cin
-#include <thread>
-#include <mutex>
+#include <iostream>
 #include <unistd.h>
 #include <sys/fcntl.h>
 
@@ -18,22 +16,9 @@
 
 
 #include "main_include.h"
-#define BUFFER_SIZE 1024
 
 
-/*class NetworkDataOutline{
-private:
-	void* data;
-	size_t size;
-    time_t sendTime;
-public:
-	void set_send_time() { sendTime =time(NULL);}
-    time_t read_time() { return sendTime; }
-};*/
-
-
-class NetworkMessage
-{
+class NetworkConnection{
 private:
 	sockaddr_in sendAddress;
 	
@@ -53,8 +38,8 @@ private:
 
 public:
 	NetworkMessage(int receivePort, int sendPort, const char broadcastIp[], time_t messageTimeoutTime);
-	void send_message(const void* sendMsg, size_t msg_size);
 
+	void send_message(const void* sendMsg, size_t msg_size);
 	bool receive_message(void* receiveMsg, size_t msg_size);
 
 	int get_network_id(){return networkID;}
