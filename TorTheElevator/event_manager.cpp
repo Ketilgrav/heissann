@@ -86,6 +86,9 @@ void handle_request(bool requestMatrix[N_FLOORS][REQUEST_MATRIX_WIDTH], int floo
 
             requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 1;
         }
+        else if(cost > externalCost){
+            requestMatrix[floor][REQUEST_MATRIX_RESPONSIBILITY] = 0;   
+        }
     }
 }
 
